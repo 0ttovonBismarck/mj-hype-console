@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>MJ Hype-Konsole</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="fx-overlays" aria-hidden="true">
+    <div id="noise"></div>
+    <div id="scanlines"></div>
+    <div id="disco"></div>
+    <div id="glitchLayer"></div>
+    <div id="confetti"></div>
+  </div>
+
+  <main class="wrap" id="app">
+    <header class="top">
+      <div class="titleBlock">
+        <h1>MICHAEL JACKSON FILM COUNTDOWN</h1>
+        <p class="subtitle">(Entwickelt statt für Technische Informatik zu lernen.)</p>
+      </div>
+
+      <div class="meta">
+        <div class="pill">Status: <span id="statusText">stabil-ish</span></div>
+        <div class="pill">Thriller-Protokoll: <span id="thrillerStatus">inaktiv</span></div>
+      </div>
+    </header>
+
+    <section class="panel">
+      <h2>Live Countdown</h2>
+
+      <div class="countdown" role="group" aria-label="Countdown">
+        <div class="cdItem">
+          <div class="cdNumber" id="days">—</div>
+          <div class="cdLabel">Tage</div>
+        </div>
+        <div class="cdItem">
+          <div class="cdNumber" id="hours">—</div>
+          <div class="cdLabel">Stunden</div>
+        </div>
+        <div class="cdItem">
+          <div class="cdNumber" id="minutes">—</div>
+          <div class="cdLabel">Minuten</div>
+        </div>
+        <div class="cdItem">
+          <div class="cdNumber" id="seconds">—</div>
+          <div class="cdLabel">Sekunden</div>
+        </div>
+      </div>
+
+      <!-- ===== DAILY IMAGE SLOT ===== -->
+      <div class="dailyImageBox">
+        <img id="dailyImage" src="" alt="Michael Jackson Bild des Tages">
+      </div>
+
+      <div class="row">
+        <button id="hypeBtn" class="btn">
+          <span class="btnIcon" aria-hidden="true">⚡</span>
+          ACTIVATE HYPE
+        </button>
+
+        <div class="stats">
+          <div class="stat">
+            <div class="statLabel">Hype (Sitzung)</div>
+            <div class="statValue" id="sessionHype">0</div>
+          </div>
+          <div class="stat">
+            <div class="statLabel">Global Hype Level</div>
+            <div class="statValue" id="globalHype">0</div>
+            <div class="statHint" id="globalHint">persistent (localStorage)</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row2">
+        <div class="smallBox">
+          <div class="smallTitle">Systemmeldungen</div>
+          <div class="log" id="log">
+            <div class="logLine">• Booting…</div>
+          </div>
+        </div>
+
+        <div class="smallBox">
+          <div class="smallTitle">Daily MJ Fact</div>
+          <div class="fact" id="fact">
+            Daily Fact System: noch in Entwicklung (weil ich eigentlich lernen sollte).
+          </div>
+        </div>
+      </div>
+
+      <footer class="footer">
+        <div class="footerLeft">
+          <span class="kbd">Tipp</span> Mehrfach klicken = Eskalation.  
+          <span class="kbd">Easter Egg</span> Rhythmus-Pattern → Thriller Mode.
+        </div>
+        <div class="footerRight">
+          <button id="resetGlobal" class="linkBtn" type="button">Global Hype zurücksetzen</button>
+        </div>
+      </footer>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
