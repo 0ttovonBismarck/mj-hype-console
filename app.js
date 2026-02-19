@@ -5,7 +5,7 @@
 // ====== CONFIG ======
 const CONFIG = {
   // Du trägst später den deutschen Kinostart ein:
-  targetDate: new Date("2026-12-31T00:00:00"),
+  targetDate: new Date("2026-04-23T00:00:00"),
 
   // NEW: Größeres Fenster => Meltdown erreichbar + Stufen “leben” länger
   burstWindowMs: 3200,
@@ -613,4 +613,5 @@ function maybePlayBeatItSting(nowMs){
 
   setTimeout(() => stopLongTrack(longTrack.beatit), BEATIT_STING_MS);
 }
+
 
