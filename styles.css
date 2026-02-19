@@ -264,77 +264,121 @@ body{
 }
 .linkBtn:hover{ filter: brightness(1.12); }
 
+/* ===== FX Overlays ===== */
+#fx-overlays{ position:fixed; inset:0; pointer-events:none; z-index: 5; }
+
+#noise{
+  position:absolute; inset:0;
+  opacity: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='.45'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+  transition: opacity .2s ease;
+}
+
+#scanlines{
+  position:absolute; inset:0;
+  opacity: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(255,255,255,.05) 0px,
+    rgba(255,255,255,.05) 1px,
+    transparent 3px,
+    transparent 6px
+  );
+  mix-blend-mode: overlay;
+  transition: opacity .2s ease;
+}
+
+#disco{
+  position:absolute; inset:0;
+  opacity: 0;
+  background: conic-gradient(from 180deg, rgba(255,45,45,.28), rgba(255,179,0,.22), rgba(60,220,255,.18), rgba(255,45,45,.28));
+  filter: blur(10px);
+  transition: opacity .25s ease;
+  background-size: 200% 200%;
+  mix-blend-mode: screen;
+}
+
+#glitchLayer{
+  position:absolute; inset:0;
+  opacity:0;
+  background: linear-gradient(90deg, rgba(255,45,45,.16), rgba(0,0,0,0), rgba(60,220,255,.12));
+  mix-blend-mode: screen;
+  transition: opacity .12s ease;
+}
+
+#confetti{
+  position:absolute; inset:0;
+  opacity:0;
+  background:
+    radial-gradient(circle at 10% 20%, rgba(255,179,0,.9) 0 2px, transparent 3px),
+    radial-gradient(circle at 30% 70%, rgba(255,45,45,.9) 0 2px, transparent 3px),
+    radial-gradient(circle at 55% 35%, rgba(60,220,255,.9) 0 2px, transparent 3px),
+    radial-gradient(circle at 80% 60%, rgba(255,255,255,.9) 0 2px, transparent 3px);
+  background-size: 120px 120px;
+  transition: opacity .2s ease;
+}
+
 /* ===== DAILY IMAGE SLOT ===== */
 .dailyImageBox{
-  margin: 0 0 16px;              /* sitzt direkt nach Countdown */
+  margin: 0 0 16px;
   border-radius: 14px;
   overflow: hidden;
   border: 1px solid var(--line);
   background: rgba(0,0,0,.28);
   box-shadow: 0 8px 24px rgba(0,0,0,.35);
 
-  /* NEW: konstantes “Frame”-Verhältnis, egal wie wild die JPGs sind */
   aspect-ratio: 16 / 9;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-#dailyImageWrap img{
-  width: 100%;
-  height: 100%;
-  display: block;
-
-  /* NEW: kein Crop mehr -> ganze Bilder sichtbar */
-  object-fit: contain;
-  object-position: center;
-
-  filter: contrast(1.02) saturate(1.02);
-
-  #dailyImageWrap {
+#dailyImageWrap{
   position: relative;
   width: 100%;
   height: 100%;
   overflow: hidden;
 }
 
-  /* ===== Moving disco lights ===== */
+#dailyImageWrap img{
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+  object-position: center;
+  filter: contrast(1.02) saturate(1.02);
+}
+
+/* ===== Moving disco lights (Stage Ramp + Meltdown) ===== */
 @keyframes discoSpin {
   0%   { transform: rotate(0deg) scale(1.08); filter: blur(12px) hue-rotate(0deg) saturate(1.6); }
   100% { transform: rotate(360deg) scale(1.08); filter: blur(12px) hue-rotate(360deg) saturate(1.6); }
 }
 
-/* weiche Lichtwellen über den Screen */
 @keyframes discoSweep {
   0%   { background-position: 0% 50%; opacity: .35; }
   50%  { background-position: 100% 50%; opacity: .65; }
   100% { background-position: 0% 50%; opacity: .35; }
 }
 
-/* nutzt dein bestehendes #disco overlay */
-#disco {
-  background-size: 200% 200%;
-}
-
-/* Stage: leichtes “Leben” */
-.stage-1 #disco { opacity: .12; animation: discoSweep 3.2s ease-in-out infinite; }
-.stage-2 #disco { opacity: .22; animation: discoSweep 2.2s ease-in-out infinite; }
-.stage-3 #disco { opacity: .35; animation: discoSweep 1.6s ease-in-out infinite; }
-.stage-4 #disco { opacity: .48; animation: discoSweep 1.1s ease-in-out infinite; }
+/* Stage: leicht -> mehr */
+#fx-overlays.stage-1 #disco { opacity: .12; animation: discoSweep 3.2s ease-in-out infinite; }
+#fx-overlays.stage-2 #disco { opacity: .22; animation: discoSweep 2.2s ease-in-out infinite; }
+#fx-overlays.stage-3 #disco { opacity: .35; animation: discoSweep 1.6s ease-in-out infinite; }
+#fx-overlays.stage-4 #disco { opacity: .48; animation: discoSweep 1.1s ease-in-out infinite; }
 
 /* MELTDOWN: alles dreht durch */
-.meltdown #disco{
+#fx-overlays.meltdown #disco{
   opacity: 1 !important;
   animation: discoSpin 650ms linear infinite, discoSweep 900ms ease-in-out infinite;
 }
-
-.meltdown #confetti{ opacity: .95 !important; }
-.meltdown #glitchLayer{ opacity: .85 !important; }
-.meltdown #noise{ opacity: .55 !important; }
-.meltdown #scanlines{ opacity: .35 !important; 
+#fx-overlays.meltdown #confetti{ opacity: .95 !important; }
+#fx-overlays.meltdown #glitchLayer{ opacity: .85 !important; }
+#fx-overlays.meltdown #noise{ opacity: .55 !important; }
+#fx-overlays.meltdown #scanlines{ opacity: .35 !important; }
 
 /* Thriller: wandernder Scan-Balken */
-#dailyImageWrap { position: relative; }
 #dailyImageWrap::after{
   content:"";
   position:absolute;
@@ -348,7 +392,7 @@ body{
   pointer-events:none;
 }
 
-.thriller #dailyImageWrap::after{
+#fx-overlays.thriller #dailyImageWrap::after{
   opacity: 1;
   animation: thrillerScan 1.4s ease-in-out infinite;
 }
@@ -359,4 +403,6 @@ body{
   100% { left:110%; }
 }
 
-
+/* Glitch helper class */
+#fx-overlays.glitch #glitchLayer{ opacity:.65; }
+#fx-overlays.glitch #noise{ opacity:.35; }
