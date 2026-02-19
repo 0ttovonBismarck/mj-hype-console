@@ -33,7 +33,7 @@ const CONFIG = {
     expectedMultiples: [1, 1, 1, 2, 6, 2, 2],
 
     // strenger: Spam soll nicht reichen
-    toleranceMs: 140,
+    toleranceMs: 220,
 
     // Tempo-Grenzen (deine Bases lagen grob 230–265ms)
     minBaseMs: 170,
@@ -690,5 +690,6 @@ function stopLongTrack(aud){
     aud.currentTime = 0;
   }catch(_){}
 }
+
 
 
