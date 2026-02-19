@@ -250,15 +250,26 @@ body{
   color: var(--muted);
   font-size: 12px;
 }
-.footerLeft{ line-height:1.4; }
-.kbd{
-  font-family: var(--mono);
-  border:1px solid var(--line);
-  background: rgba(255,255,255,.04);
-  padding: 2px 7px;
-  border-radius: 999px;
-  margin: 0 6px 0 0;
-  color: var(--text);
+.footer{
+  display:flex;
+  justify-content: space-between;
+  align-items: flex-start;   /* statt center */
+  gap: 14px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.footerLeft{
+  line-height: 1.55;
+  white-space: pre-line;   /* DAS ist der Gamechanger */
+  max-width: 740px;        /* damit es nicht endlos breit wird */
+}
+
+.footerRight{
+  flex: 0 0 auto;
 }
 
 .linkBtn{
@@ -485,3 +496,4 @@ body{
 /* Glitch helper class */
 #fx-overlays.glitch #glitchLayer{ opacity:.65; }
 #fx-overlays.glitch #noise{ opacity:.35; }
+
