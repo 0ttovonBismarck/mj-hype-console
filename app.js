@@ -604,6 +604,8 @@ function maybePlayBeatItSting(nowMs){
   playLongTrack(longTrack.beatit);
 
   setTimeout(() => stopLongTrack(longTrack.beatit), BEATIT_STING_MS);
+}
+
 
 
 
