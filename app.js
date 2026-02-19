@@ -560,6 +560,13 @@ function logLine(text){
   el.log.scrollTop = el.log.scrollHeight;
 }
 
+// ====== STAGE CLASSES (CSS Visual Ramp) ======
+function setStageClass(stage){
+  if (!el.fx) return;
+  el.fx.classList.remove("stage-0","stage-1","stage-2","stage-3","stage-4");
+  el.fx.classList.add(`stage-${stage}`);
+}
+
 // ====== SOUND HELPERS ======
 function playRandomHypeSound(opts = {}){
   const poolKeys = ["heehee","hoo","auw","oohh","dow"];
@@ -605,6 +612,7 @@ function maybePlayBeatItSting(nowMs){
 
   setTimeout(() => stopLongTrack(longTrack.beatit), BEATIT_STING_MS);
 }
+
 
 
 
