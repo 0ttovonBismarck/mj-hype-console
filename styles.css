@@ -326,5 +326,29 @@ body{
 .meltdown #noise{ opacity: .55 !important; }
 .meltdown #scanlines{ opacity: .35 !important; 
 
+/* Thriller: wandernder Scan-Balken */
+#dailyImageWrap { position: relative; }
+#dailyImageWrap::after{
+  content:"";
+  position:absolute;
+  left:-40%;
+  top:0;
+  width:40%;
+  height:100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.18), transparent);
+  transform: skewX(-18deg);
+  opacity: 0;
+  pointer-events:none;
+}
 
+.thriller #dailyImageWrap::after{
+  opacity: 1;
+  animation: thrillerScan 1.4s ease-in-out infinite;
+}
+
+@keyframes thrillerScan{
+  0%   { left:-45%; }
+  50%  { left:55%; }
+  100% { left:110%; }
+}
 
