@@ -360,6 +360,13 @@ function computeLevel(burst){
 
 // ====== STAGE FX ======
 function applyStageFX(burst){
+  const stage =
+  burst >= 16 ? 4 :
+  burst >= 14 ? 3 :
+  burst >= 10 ? 2 :
+  burst >= 6  ? 1 : 0;
+
+setStageClass(stage);
   const t = Math.min(1, burst / noteMeltdownDivisor());
   const expo = Math.pow(t, 2.2);
 
@@ -612,6 +619,7 @@ function maybePlayBeatItSting(nowMs){
 
   setTimeout(() => stopLongTrack(longTrack.beatit), BEATIT_STING_MS);
 }
+
 
 
 
