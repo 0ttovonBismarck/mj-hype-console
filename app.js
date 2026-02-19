@@ -50,6 +50,15 @@ const CONFIG = {
     maxLongestMultiple: 7.6
   },
 
+  // Global Hype Tier (abhängig vom globalen Hype)
+  hypeTiers: [
+    { min: 0,    label: "Casual Fan" },
+    { min: 100,  label: "Moonwalker" },
+    { min: 300,  label: "Dangerous" },
+    { min: 700,  label: "King of Pop Territory" },
+    { min: 1500, label: "Global Takeover" }
+  ],
+
   facts: [
     "Daily Fact System: noch in Entwicklung (weil ich eigentlich lernen sollte)."
   ],
@@ -66,12 +75,15 @@ const el = {
   seconds: document.getElementById("seconds"),
   statusText: document.getElementById("statusText"),
   thrillerStatus: document.getElementById("thrillerStatus"),
+  hypeTier: document.getElementById("hypeTier"),
+
   hypeBtn: document.getElementById("hypeBtn"),
   sessionHype: document.getElementById("sessionHype"),
   globalHype: document.getElementById("globalHype"),
   log: document.getElementById("log"),
   fact: document.getElementById("fact"),
   resetGlobal: document.getElementById("resetGlobal"),
+
   fx: document.getElementById("fx-overlays"),
   app: document.getElementById("app"),
   noise: document.getElementById("noise"),
@@ -79,8 +91,12 @@ const el = {
   disco: document.getElementById("disco"),
   glitchLayer: document.getElementById("glitchLayer"),
   confetti: document.getElementById("confetti"),
+
   globalHint: document.getElementById("globalHint"),
   dailyImage: document.getElementById("dailyImage"),
+
+  countdownNote: document.getElementById("countdownNote"),
+  toast: document.getElementById("toast"),
 };
 
 // ====== AUDIO (Fallbacks, weil GitHub Upload gerne doppelte Endungen macht) ======
@@ -176,6 +192,19 @@ let meltdownCooldownUntil = 0;
 
 let dailyImageIndex = 0;
 
+// ====== TOAST ======
+let toastTimer = null;
+
+function showToast(text, ms = 2400){
+  if (!el.toast) return;
+  el.toast.textContent = text;
+  el.toast.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    el.toast.classList.remove("show");
+  }, ms);
+}
+
 // ====== INIT ======
 renderCounters();
 renderDailyFact();
@@ -195,6 +224,12 @@ if (el.hypeBtn){
     globalHype += 1;
     saveGlobalHype(globalHype);
     renderCounters();
+
+    // Relationship mini-event
+    if (sessionHype === 100){
+      showToast("Achtung: Cassy übertreibt es wieder komplett.");
+      logLine("• Session-Event: Cassy im Hype-Modus (100).");
+    }
 
     // Burst tracking
     clickTimes.push(now);
@@ -270,6 +305,7 @@ function tickCountdown(){
     el.hours.textContent = "0";
     el.minutes.textContent = "0";
     el.seconds.textContent = "0";
+    if (el.countdownNote) el.countdownNote.textContent = "Heute. Und ja: komplett verdient.";
     setStatus("RELEASED", thrillerActive ? "aktiv" : "inaktiv");
     return;
   }
@@ -284,6 +320,10 @@ function tickCountdown(){
   el.hours.textContent = String(hours).padStart(2, "0");
   el.minutes.textContent = String(minutes).padStart(2, "0");
   el.seconds.textContent = String(seconds).padStart(2, "0");
+
+  if (el.countdownNote){
+    el.countdownNote.textContent = `${days} Tage – und das Warten hat ein Ende.`;
+  }
 }
 
 // ====== FACTS + DAILY IMAGE ======
@@ -322,6 +362,8 @@ function renderCounters(){
   if (el.sessionHype) el.sessionHype.textContent = String(sessionHype);
   if (el.globalHype) el.globalHype.textContent = String(globalHype);
   if (el.globalHint) el.globalHint.textContent = "persistent (localStorage)";
+
+  if (el.hypeTier) el.hypeTier.textContent = computeHypeTier(globalHype);
 }
 
 function loadGlobalHype(){
@@ -346,6 +388,14 @@ function computeLevel(burst){
     if (burst >= lvl.minBurst) chosen = lvl;
   }
   return chosen;
+}
+
+function computeHypeTier(val){
+  let tier = CONFIG.hypeTiers[0].label;
+  for (const t of CONFIG.hypeTiers){
+    if (val >= t.min) tier = t.label;
+  }
+  return tier;
 }
 
 // ====== STAGE FX ======
@@ -640,4 +690,3 @@ function stopLongTrack(aud){
     aud.currentTime = 0;
   }catch(_){}
 }
-
