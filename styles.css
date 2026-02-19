@@ -291,4 +291,40 @@ body{
 
   filter: contrast(1.02) saturate(1.02);
 
+  /* ===== Moving disco lights ===== */
+@keyframes discoSpin {
+  0%   { transform: rotate(0deg) scale(1.08); filter: blur(12px) hue-rotate(0deg) saturate(1.6); }
+  100% { transform: rotate(360deg) scale(1.08); filter: blur(12px) hue-rotate(360deg) saturate(1.6); }
+}
+
+/* weiche Lichtwellen über den Screen */
+@keyframes discoSweep {
+  0%   { background-position: 0% 50%; opacity: .35; }
+  50%  { background-position: 100% 50%; opacity: .65; }
+  100% { background-position: 0% 50%; opacity: .35; }
+}
+
+/* nutzt dein bestehendes #disco overlay */
+#disco {
+  background-size: 200% 200%;
+}
+
+/* Stage: leichtes “Leben” */
+.stage-1 #disco { opacity: .12; animation: discoSweep 3.2s ease-in-out infinite; }
+.stage-2 #disco { opacity: .22; animation: discoSweep 2.2s ease-in-out infinite; }
+.stage-3 #disco { opacity: .35; animation: discoSweep 1.6s ease-in-out infinite; }
+.stage-4 #disco { opacity: .48; animation: discoSweep 1.1s ease-in-out infinite; }
+
+/* MELTDOWN: alles dreht durch */
+.meltdown #disco{
+  opacity: 1 !important;
+  animation: discoSpin 650ms linear infinite, discoSweep 900ms ease-in-out infinite;
+}
+
+.meltdown #confetti{ opacity: .95 !important; }
+.meltdown #glitchLayer{ opacity: .85 !important; }
+.meltdown #noise{ opacity: .55 !important; }
+.meltdown #scanlines{ opacity: .35 !important; 
+
+
 
