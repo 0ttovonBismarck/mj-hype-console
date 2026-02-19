@@ -22,7 +22,7 @@ const CONFIG = {
 
   // Meltdown
   meltdownBurst: 18,
-  meltdownDurationMs: 6500,   // visuelle Phase (Sound darf weiterlaufen)
+  meltdownDurationMs: 13000,   // visuelle Phase (Sound darf weiterlaufen)
   meltdownCooldownMs: 9000,
 
   // ===== Thriller Pattern (tempo-invariant) =====
@@ -519,7 +519,7 @@ function activateMeltdown(){
     stopShake();
 
     setStatus("cooldown…", "inaktiv");
-    logLine("• Meltdown beendet. Bitte weiterlernen (angeblich).");
+    logLine("• Meltdown beendet. Bitte jetzt etwas Sinnvolles tun :)");
   }, CONFIG.meltdownDurationMs);
 }
 
@@ -640,3 +640,4 @@ function stopLongTrack(aud){
     aud.currentTime = 0;
   }catch(_){}
 }
+
