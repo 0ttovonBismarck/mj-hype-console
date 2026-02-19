@@ -235,7 +235,7 @@ if (el.hypeBtn){
     clickTimes.push(now);
     clickTimes = pruneTimes(clickTimes, now - CONFIG.burstWindowMs);
     const burst = clickTimes.length;
-    const nearMeltdown = burst >= (CONFIG.meltdownBurst - 2);
+    const nearMeltdown = burst >= (CONFIG.meltdownBurst);
 
     // Cooldown
     if (now < meltdownCooldownUntil) {
@@ -690,6 +690,7 @@ function stopLongTrack(aud){
     aud.currentTime = 0;
   }catch(_){}
 }
+
 
 
 
