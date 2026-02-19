@@ -29,16 +29,29 @@ const CONFIG = {
 
   // ===== Thriller Pattern (tempo-invariant) =====
   thriller: {
-    enabled: true,
+  enabled: true,
 
-    // kurz-kurz-kurz-lang (placeholder – du ersetzt später wieder)
-    expectedMultiples: [1, 1, 1, 2],
-    baseMs: 260,
-    toleranceMs: 120,
+  // 8 Klicks => 7 Intervalle
+  // Aus deinen Messungen: meistens [1,1,1,2,6,2,2] oder Variationen mit 7er langem Intervall
+  expectedMultiples: [1, 1, 1, 2, 6, 2, 2],
 
-    minBaseMs: 140,
-    maxBaseMs: 420,
-    maxTotalWindowMs: 2200,
+  // Toleranz strenger (Spam soll NICHT reichen)
+  toleranceMs: 70,
+
+  // Tempo-Grenzen (deine Bases lagen ~230–265ms)
+  minBaseMs: 170,
+  maxBaseMs: 320,
+
+  // 8 Klicks mit “langem” Intervall -> braucht mehr Gesamtfenster als vorher
+  maxTotalWindowMs: 5200,
+
+  // soll 15s komplett laufen
+  activateDurationMs: 15000,
+
+  // Anti-Spam / Anti-Zufall: Pattern muss "sauber" sein
+  minLongestMultiple: 5.2,  // langes Intervall muss ~>= 5.2x base sein
+  maxLongestMultiple: 7.6,  // und <= ~7.6x base
+}
 
     // (Thriller passt du separat an – hier erstmal lassen)
     activateDurationMs: 6500
@@ -613,5 +626,6 @@ function maybePlayBeatItSting(nowMs){
 
   setTimeout(() => stopLongTrack(longTrack.beatit), BEATIT_STING_MS);
 }
+
 
 
