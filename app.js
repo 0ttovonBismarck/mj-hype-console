@@ -1,70 +1,3 @@
-// ==============================
-// MJ Hype-Konsole – Grundlogik (FIXED Thriller Pattern + Meltdown Priority)
-// ==============================
-
-// ====== CONFIG ======
-const CONFIG = {
-  // Deutscher Kinostart (hast du schon eingetragen)
-  targetDate: new Date("2026-04-23T00:00:00"),
-
-  // Größeres Fenster => Stufen leben länger + Burst ist "machbar"
-  burstWindowMs: 3800,
-
-  // Stufen (spürbarer Ramp)
-  levels: [
-    { minBurst: 1,  label: "stabil-ish" },
-    { minBurst: 6,  label: "leicht instabil" },
-    { minBurst: 10, label: "kritisch hypey" },
-    { minBurst: 14, label: "sehr kritisch" },
-    { minBurst: 16, label: "meltdown imminent" }
-  ],
-
-  // Meltdown früher/erreichbarer als vorher
-  meltdownBurst: 18,
-  meltdownDurationMs: 6500,
-  meltdownCooldownMs: 9000,
-
-  // ===== Thriller Pattern (tempo-invariant) =====
-  thriller: {
-    enabled: true,
-
-    // 8 Klicks => 7 Intervalle
-    expectedMultiples: [1, 1, 1, 2, 6, 2, 2],
-
-    // strenger: Spam soll nicht reichen
-    toleranceMs: 70,
-
-    // Tempo-Grenzen (deine Bases lagen grob 230–265ms)
-    minBaseMs: 170,
-    maxBaseMs: 320,
-
-    // 8 Klicks inkl. langer Pause -> größeres Gesamtfenster
-    maxTotalWindowMs: 5200,
-
-    // Sound soll komplett laufen (15s)
-    activateDurationMs: 15000,
-
-    // Anti-Spam: es MUSS eine echte "lange Pause" geben (ca. 6x base)
-    minLongestMultiple: 5.2,
-    maxLongestMultiple: 7.6
-  },
-
-  facts: [
-    "Daily Fact System: noch in Entwicklung (weil ich eigentlich lernen sollte)."
-  ],
-
-  images: Array.from({ length: 25 }, (_, i) => `assets/images/p${i + 1}.jpg`),
-  thrillerImage: "assets/images/thrillermodepicture.jpg"
-};
-
-// ====== DOM ======
-const el = {
-  days: document.getElementById("days"),
-  hours: document.getElementById("hours"),
-  minutes: document.getElementById("minutes"),
-  seconds: document.getElementById("seconds"),
-  statusText: document.getElementById("statusText"),
-  thrillerStatus: document.getElementById("thrillerStatus"),
   hypeBtn: document.getElementById("hypeBtn"),
   sessionHype: document.getElementById("sessionHype"),
   globalHype: document.getElementById("globalHype"),
@@ -94,21 +27,25 @@ const sounds = {
   thrillermode: "assets/sounds/thrillermode.mp3",
 };
 
-// Long tracks (stop/seek möglich)
+// Long tracks
 const longTrack = {
   beatit: new Audio(sounds.beatit),
   thrillerbass: new Audio(sounds.thrillerbass),
   thrillermode: new Audio(sounds.thrillermode),
 };
 
-// Lautstärken (macht später Feintuning leicht)
+// Browser clamp: Audio.volume ist 0..1.0.
+// Wir lassen das auf 1.0 und boosten BeatIt über WebAudio-Gain (siehe unten).
 longTrack.beatit.volume = 1.0;
-longTrack.thrillerbass.volume = 0.9;
+longTrack.thrillerbass.volume = 0.95;
 longTrack.thrillermode.volume = 1.0;
 
+// (ALT) Sting-Variablen bleiben drin, aber werden nicht mehr genutzt.
+// Du wolltest BeatIt NUR beim Meltdown.
 let lastBeatItAt = 0;
 const BEATIT_COOLDOWN_MS = 6000;
 const BEATIT_STING_MS = 2800;
+let beatItStingTimer = null;
 
 // ====== AUDIO POOL (zuverlässiger SFX pro Klick) ======
 const SFX_POOL_SIZE = 5;
@@ -130,6 +67,35 @@ function initSfxPool(){
 }
 initSfxPool();
 
+// ====== WEBAUDIO BOOST (für BeatIt "1.4x") ======
+// Audio.volume kann nicht > 1.0, aber WebAudio Gain kann.
+// Wir hängen das <audio> Element an eine GainNode und boosten im Meltdown.
+let audioCtx = null;
+let beatItSource = null;
+let beatItGain = null;
+
+function ensureBeatItBoostChain(){
+  if (beatItGain) return;
+
+  audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+  // Quelle einmalig bauen
+  beatItSource = audioCtx.createMediaElementSource(longTrack.beatit);
+  beatItGain = audioCtx.createGain();
+  beatItGain.gain.value = 1.0;
+
+  beatItSource.connect(beatItGain).connect(audioCtx.destination);
+}
+
+function setBeatItBoost(multiplier){
+  // multiplier z.B. 1.4 (dein Wunsch)
+  ensureBeatItBoostChain();
+  // smooth setzen (kleines Ramp, damit es nicht "knackt")
+  const now = audioCtx.currentTime;
+  beatItGain.gain.cancelScheduledValues(now);
+  beatItGain.gain.setValueAtTime(beatItGain.gain.value, now);
+  beatItGain.gain.linearRampToValueAtTime(multiplier, now + 0.05);
+}
+
 // ====== STATE ======
 let sessionHype = 0;
 let globalHype = loadGlobalHype();
@@ -143,57 +109,15 @@ let meltdownCooldownUntil = 0;
 
 let dailyImageIndex = 0;
 
-// ====== SHAKE ENGINE ======
-let shakeRAF = null;
-let shakeUntil = 0;
-let shakeAmp = 0;
-let shakeRot = 0;
-
-function startShake(amplitudePx, amplitudeDeg, durationMs){
-  shakeAmp = Math.max(shakeAmp, amplitudePx);
-  shakeRot = Math.max(shakeRot, amplitudeDeg);
-  shakeUntil = Math.max(shakeUntil, Date.now() + durationMs);
-
-  if (!shakeRAF) shakeRAF = requestAnimationFrame(shakeTick);
-}
-
-function stopShake(){
-  if (shakeRAF) cancelAnimationFrame(shakeRAF);
-  shakeRAF = null;
-  shakeUntil = 0;
-  shakeAmp = 0;
-  shakeRot = 0;
-  if (el.app) el.app.style.transform = "";
-}
-
-function shakeTick(){
-  const now = Date.now();
-  const alive = now < shakeUntil;
-
-  if (el.app && alive){
-    const t = (shakeUntil - now) / 1000;
-    const damp = Math.max(0.25, Math.min(1, t));
-
-    const dx = (Math.random() * 2 - 1) * shakeAmp * damp;
-    const dy = (Math.random() * 2 - 1) * shakeAmp * damp;
-    const dr = (Math.random() * 2 - 1) * shakeRot * damp;
-
-    el.app.style.transform = `translate(${dx}px, ${dy}px) rotate(${dr}deg)`;
-    shakeRAF = requestAnimationFrame(shakeTick);
-    return;
-  }
-
-  stopShake();
-}
-
-// ====== MELTDOWN FX TIMER ======
-let meltdownFxTimer = null;
-
 // ====== INIT ======
 renderCounters();
 renderDailyFact();
 logLine("• Boot complete. Waiting for hype input…");
+
 startCountdown();
+
+// Stage-Decay: ohne Klick soll der Status/Stufe wieder runtergehen
+setInterval(tickStageDecay, 200);
 
 // ====== EVENTS ======
 el.hypeBtn.addEventListener("click", () => {
@@ -249,7 +173,8 @@ el.hypeBtn.addEventListener("click", () => {
 
   playRandomHypeSound({ volume: 0.78 });
 
-  if (level.label === "meltdown imminent") maybePlayBeatItSting(now);
+  // ❌ BeatIt-Sting aus: du willst BeatIt nur beim Meltdown.
+  // if (level.label === "meltdown imminent") maybePlayBeatItSting(now);
 
   logLine(`• Hype +1 (Sitzung ${sessionHype}, Global ${globalHype}) — Burst ${burst}.`);
 });
@@ -276,7 +201,7 @@ function tickCountdown(){
     el.hours.textContent = "0";
     el.minutes.textContent = "0";
     el.seconds.textContent = "0";
-    setStatus("RELEASED", thrillerActive ? "aktiv" : additionallyThrillerText());
+    setStatus("RELEASED", thrillerActive ? "aktiv" : "inaktiv");
     return;
   }
 
@@ -290,10 +215,6 @@ function tickCountdown(){
   el.hours.textContent = String(hours).padStart(2, "0");
   el.minutes.textContent = String(minutes).padStart(2, "0");
   el.seconds.textContent = String(seconds).padStart(2, "0");
-}
-
-function additionallyThrillerText(){
-  return thrillerActive ? "aktiv" : "inaktiv";
 }
 
 // ====== FACTS + DAILY IMAGE ======
@@ -358,15 +279,20 @@ function computeLevel(burst){
   return chosen;
 }
 
+function noteMeltdownDivisor(){
+  return CONFIG.meltdownBurst;
+}
+
 // ====== STAGE FX ======
 function applyStageFX(burst){
   const stage =
-  burst >= 16 ? 4 :
-  burst >= 14 ? 3 :
-  burst >= 10 ? 2 :
-  burst >= 6  ? 1 : 0;
+    burst >= 16 ? 4 :
+    burst >= 14 ? 3 :
+    burst >= 10 ? 2 :
+    burst >= 6  ? 1 : 0;
 
-setStageClass(stage);
+  setStageClass(stage);
+
   const t = Math.min(1, burst / noteMeltdownDivisor());
   const expo = Math.pow(t, 2.2);
 
@@ -389,11 +315,56 @@ setStageClass(stage);
   if (el.confetti) el.confetti.style.opacity = burst >= 12 ? "0.25" : "0";
 }
 
-function noteMeltdownDivisor(){
-  return CONFIG.meltdownBurst;
+function lerp(a,b,t){ return a + (b-a)*t; }
+
+function setStageClass(stage){
+  if (!el.fx) return;
+  el.fx.classList.remove("stage-0","stage-1","stage-2","stage-3","stage-4");
+  el.fx.classList.add(`stage-${stage}`);
 }
 
-function lerp(a,b,t){ return a + (b-a)*t; }
+// ====== STAGE DECAY TICK (damit Level ohne Klick runtergeht) ======
+function tickStageDecay(){
+  if (meltdownActive || thrillerActive) return;
+
+  const now = Date.now();
+
+  clickTimes = pruneTimes(clickTimes, now - CONFIG.burstWindowMs);
+  patternClicks = pruneTimes(patternClicks, now - CONFIG.thriller.maxTotalWindowMs);
+
+  const burst = clickTimes.length;
+
+  applyStageVisualsOnly(burst);
+
+  if (now < meltdownCooldownUntil){
+    setStatus("cooldown…", "inaktiv");
+  } else {
+    const level = computeLevel(burst);
+    setStatus(level.label, "inaktiv");
+  }
+}
+
+function applyStageVisualsOnly(burst){
+  const stage =
+    burst >= 16 ? 4 :
+    burst >= 14 ? 3 :
+    burst >= 10 ? 2 :
+    burst >= 6  ? 1 : 0;
+
+  setStageClass(stage);
+
+  const t = Math.min(1, burst / noteMeltdownDivisor());
+  const expo = Math.pow(t, 2.2);
+
+  const discoOp = lerp(0.0, 0.55, expo);
+  const noiseOp = lerp(0.0, 0.45, expo);
+  const scanOp  = lerp(0.0, 0.20, expo);
+
+  if (el.disco) el.disco.style.opacity = String(discoOp);
+  if (el.noise) el.noise.style.opacity = String(noiseOp);
+  if (el.scanlines) el.scanlines.style.opacity = String(scanOp);
+  if (el.confetti) el.confetti.style.opacity = burst >= 12 ? "0.25" : "0";
+}
 
 // ====== GLITCH ======
 function quickGlitch(){
@@ -402,84 +373,93 @@ function quickGlitch(){
   setTimeout(() => el.fx.classList.remove("glitch"), 140);
 }
 
+// ====== SHAKE ENGINE ======
+let shakeRAF = null;
+let shakeUntil = 0;
+let shakeAmp = 0;
+let shakeRot = 0;
+
+function startShake(amplitudePx, amplitudeDeg, durationMs){
+  shakeAmp = Math.max(shakeAmp, amplitudePx);
+  shakeRot = Math.max(shakeRot, amplitudeDeg);
+  shakeUntil = Math.max(shakeUntil, Date.now() + durationMs);
+  if (!shakeRAF) shakeRAF = requestAnimationFrame(shakeTick);
+}
+
+function stopShake(){
+  if (shakeRAF) cancelAnimationFrame(shakeRAF);
+  shakeRAF = null;
+  shakeUntil = 0;
+  shakeAmp = 0;
+  shakeRot = 0;
+  if (el.app) el.app.style.transform = "";
+}
+
+function shakeTick(){
+  const now = Date.now();
+  const alive = now < shakeUntil;
+
+  if (el.app && alive){
+    const t = (shakeUntil - now) / 1000;
+    const damp = Math.max(0.25, Math.min(1, t));
+
+    const dx = (Math.random() * 2 - 1) * shakeAmp * damp;
+    const dy = (Math.random() * 2 - 1) * shakeAmp * damp;
+    const dr = (Math.random() * 2 - 1) * shakeRot * damp;
+
+    el.app.style.transform = `translate(${dx}px, ${dy}px) rotate(${dr}deg)`;
+    shakeRAF = requestAnimationFrame(shakeTick);
+    return;
+  }
+
+  stopShake();
+}
+
 // ====== MELTDOWN ======
 function activateMeltdown(){
   if (meltdownActive) return;
 
   const now = Date.now();
   meltdownActive = true;
+
+  // wichtig: evtl. laufenden BeatIt-Sting-Timer killen, sonst wird BeatIt mitten im Meltdown abgeschnitten
+  if (beatItStingTimer) { clearTimeout(beatItStingTimer); beatItStingTimer = null; }
+
   meltdownCooldownUntil = now + CONFIG.meltdownDurationMs + CONFIG.meltdownCooldownMs;
 
-  setStatus("MELTDOWN", thrillerActive ? "aktiv" : "inaktiv");
+  setStatus("MELTDOWN", "inaktiv");
   if (el.fx) el.fx.classList.add("meltdown");
 
-  // Visuals: MAX
-  if (el.disco) {
-    el.disco.style.opacity = "1";
-    el.disco.style.filter = "blur(8px)";
-  }
-  if (el.confetti) el.confetti.style.opacity = "1";
-  if (el.noise) el.noise.style.opacity = "0.75";
-  if (el.scanlines) el.scanlines.style.opacity = "0.40";
-  if (el.glitchLayer) el.glitchLayer.style.opacity = "0.95";
-
-  // Rainbow moving lights via JS transform/hue
-  if (meltdownFxTimer) clearInterval(meltdownFxTimer);
-  let rot = 0;
-  let hue = 0;
-
-  meltdownFxTimer = setInterval(() => {
-    startShake(16, 1.8, 220);
-
-    if (Math.random() < 0.75) quickGlitch();
-    if (el.noise) el.noise.style.opacity = (Math.random() * 0.25 + 0.60).toFixed(2);
-    if (el.glitchLayer) el.glitchLayer.style.opacity = (Math.random() * 0.25 + 0.70).toFixed(2);
-
-    rot = (rot + 7) % 360;
-    hue = (hue + 12) % 360;
-
-    if (el.disco) {
-      el.disco.style.transform = `rotate(${rot}deg) scale(1.03)`;
-      el.disco.style.filter = `blur(10px) hue-rotate(${hue}deg) saturate(1.2)`;
-      el.disco.style.opacity = (Math.random() > 0.5 ? "1" : "0.88");
-    }
-  }, 120);
-
-  // Sound: Beat It komplett (nicht nach 6.5s stoppen)
+  // ✅ BeatIt NUR hier, und "1.4x" loudness via Gain boost
   stopLongTracks();
+  // WebAudio-Context muss durch User-Geste "unlocked" sein — der Click ist die Geste.
+  ensureBeatItBoostChain();
+  if (audioCtx && audioCtx.state === "suspended") {
+    audioCtx.resume().catch(()=>{});
+  }
+  setBeatItBoost(1.4);
   playLongTrack(longTrack.beatit);
 
+  // Meltdown läuft visuell kürzer, Sound darf weiterlaufen
   setTimeout(() => {
     meltdownActive = false;
 
-    if (meltdownFxTimer) {
-      clearInterval(meltdownFxTimer);
-      meltdownFxTimer = null;
-    }
-
     if (el.fx) el.fx.classList.remove("meltdown");
-
-    if (el.disco) {
-      el.disco.style.opacity = "0";
-      el.disco.style.transform = "";
-      el.disco.style.filter = "blur(10px)";
-    }
-    if (el.confetti) el.confetti.style.opacity = "0";
-    if (el.noise) el.noise.style.opacity = "0";
-    if (el.scanlines) el.scanlines.style.opacity = "0";
-    if (el.glitchLayer) el.glitchLayer.style.opacity = "0";
-
     stopShake();
 
-    setStatus("cooldown…", thrillerActive ? "aktiv" : "inaktiv");
+    // Nach dem Meltdown Boost wieder normalisieren, damit BeatIt danach nicht dauerhaft übersteuert
+    // (BeatIt läuft ggf. noch kurz weiter, aber ohne Megaboost)
+    try { setBeatItBoost(1.0); } catch(_){}
+
+    setStatus("cooldown…", "inaktiv");
     logLine("• Meltdown beendet. Bitte weiterlernen (angeblich).");
   }, CONFIG.meltdownDurationMs);
 }
 
-// ====== THRILLER PATTERN (ANTI-SPAM) ======
+// ====== THRILLER PATTERN ======
 function matchesThrillerPattern(clicks){
-  const exp = CONFIG.thriller.expectedMultiples;
-  const neededClicks = exp.length + 1; // 8 clicks
+  const expected = CONFIG.thriller.expectedMultiples;
+  const neededClicks = expected.length + 1;
   if (clicks.length < neededClicks) return false;
 
   const slice = clicks.slice(-neededClicks);
@@ -489,23 +469,21 @@ function matchesThrillerPattern(clicks){
     deltas.push(slice[i] - slice[i-1]);
   }
 
-  // base = median(delta/multiple) (robuster als median(deltas))
-  const baseCandidates = deltas.map((d, i) => d / exp[i]).sort((a,b) => a-b);
-  const base = baseCandidates[Math.floor(baseCandidates.length / 2)];
+  // baseLive: median der "kurzen" Deltas (wir ignorieren die größte Pause)
+  const sorted = [...deltas].sort((a,b) => a-b);
+  const longest = sorted[sorted.length - 1];
+  const shorts = sorted.slice(0, sorted.length - 1);
+  const baseLive = shorts[Math.floor(shorts.length / 2)];
 
-  if (base < CONFIG.thriller.minBaseMs || base > CONFIG.thriller.maxBaseMs) return false;
+  if (baseLive < CONFIG.thriller.minBaseMs || baseLive > CONFIG.thriller.maxBaseMs) return false;
 
-  // Anti-Spam: längstes Intervall muss "wirklich lang" sein (~6x base)
-  let maxD = -Infinity;
-  for (const d of deltas) maxD = Math.max(maxD, d);
-  const longestMultiple = maxD / base;
-
+  // Anti-Spam: lange Pause muss echt vorhanden sein (ca. 6x base)
+  const longestMultiple = longest / baseLive;
   if (longestMultiple < CONFIG.thriller.minLongestMultiple) return false;
   if (longestMultiple > CONFIG.thriller.maxLongestMultiple) return false;
 
-  // Toleranz-Check
-  for (let i = 0; i < exp.length; i++){
-    const target = exp[i] * base;
+  for (let i = 0; i < expected.length; i++){
+    const target = expected[i] * baseLive;
     if (Math.abs(deltas[i] - target) > CONFIG.thriller.toleranceMs) return false;
   }
 
@@ -521,12 +499,6 @@ function activateThrillerMode(){
   setThrillerImage();
 
   if (el.fx) el.fx.classList.add("thriller");
-  if (el.noise) el.noise.style.opacity = "0.55";
-  if (el.scanlines) el.scanlines.style.opacity = "0.35";
-  if (el.disco) el.disco.style.opacity = "0.12";
-
-  quickGlitch();
-  startShake(3, 0.25, 220);
 
   stopLongTracks();
   playLongTrack(longTrack.thrillermode);
@@ -534,13 +506,8 @@ function activateThrillerMode(){
   setTimeout(() => {
     thrillerActive = false;
     if (el.thrillerStatus) el.thrillerStatus.textContent = "inaktiv";
-
     if (el.fx) el.fx.classList.remove("thriller");
-    if (el.noise) el.noise.style.opacity = "0";
-    if (el.scanlines) el.scanlines.style.opacity = "0";
-    if (el.disco) el.disco.style.opacity = "0";
 
-    // nach 15s stoppen (Sound läuft voll)
     stopLongTrack(longTrack.thrillermode);
 
     restoreDailyImage();
@@ -567,13 +534,6 @@ function logLine(text){
   el.log.scrollTop = el.log.scrollHeight;
 }
 
-// ====== STAGE CLASSES (CSS Visual Ramp) ======
-function setStageClass(stage){
-  if (!el.fx) return;
-  el.fx.classList.remove("stage-0","stage-1","stage-2","stage-3","stage-4");
-  el.fx.classList.add(`stage-${stage}`);
-}
-
 // ====== SOUND HELPERS ======
 function playRandomHypeSound(opts = {}){
   const poolKeys = ["heehee","hoo","auw","oohh","dow"];
@@ -583,10 +543,9 @@ function playRandomHypeSound(opts = {}){
   const a = sfxPool[key][idx];
   sfxIndex[key] = (idx + 1) % SFX_POOL_SIZE;
 
-  const vol = typeof opts.volume === "number" ? opts.volume : 0.78;
-  a.volume = vol;
+  a.volume = (typeof opts.volume === "number") ? opts.volume : 0.78;
 
-  try { a.currentTime = 0; } catch(_){}
+  try{ a.currentTime = 0; }catch(_){}
   a.play().catch(()=>{});
 }
 
@@ -610,20 +569,23 @@ function stopLongTrack(aud){
   }catch(_){}
 }
 
+// (ALT) Sting-Funktion bleibt “harmlos” drin, wird aber nicht mehr aufgerufen.
+// Du kannst sie auch komplett löschen, wenn du willst.
 function maybePlayBeatItSting(nowMs){
+  if (meltdownActive || thrillerActive) return;
   if (nowMs - lastBeatItAt < BEATIT_COOLDOWN_MS) return;
   lastBeatItAt = nowMs;
+
+  if (beatItStingTimer) {
+    clearTimeout(beatItStingTimer);
+    beatItStingTimer = null;
+  }
 
   stopLongTrack(longTrack.beatit);
   playLongTrack(longTrack.beatit);
 
-  setTimeout(() => stopLongTrack(longTrack.beatit), BEATIT_STING_MS);
+  beatItStingTimer = setTimeout(() => {
+    if (!meltdownActive) stopLongTrack(longTrack.beatit);
+    beatItStingTimer = null;
+  }, BEATIT_STING_MS);
 }
-
-
-
-
-
-
-
-
