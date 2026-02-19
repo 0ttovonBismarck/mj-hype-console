@@ -40,7 +40,7 @@ const CONFIG = {
     maxBaseMs: 320,
 
     // 8 Klicks inkl. langer Pause -> größeres Gesamtfenster
-    maxTotalWindowMs: 5200,
+    maxTotalWindowMs: 6001,
 
     // Sound soll komplett laufen (15s)
     activateDurationMs: 15000,
@@ -690,6 +690,7 @@ function stopLongTrack(aud){
     aud.currentTime = 0;
   }catch(_){}
 }
+
 
 
 
