@@ -4,45 +4,61 @@
 
 // ====== CONFIG ======
 const CONFIG = {
-  // Countdown Ziel: Datum/Time setzen (lokale Zeit)
+  // Du trägst später den deutschen Kinostart ein:
   targetDate: new Date("2026-12-31T00:00:00"),
 
-  // NEW: etwas größeres Fenster => Stufen wirken bewusster
-  burstWindowMs: 2600,
+  // Eskalation: Klicks innerhalb Fenster (ms)
+  burstWindowMs: 2000,
 
-  // NEW: langsamerer Ramp-up (mehr Klicks pro Stage)
+  // Level-Schwellen basierend auf Burst-Klicks
   levels: [
     { minBurst: 1,  shake: 0, glitch: 0, disco: 0, label: "stabil-ish" },
-    { minBurst: 6,  shake: 1, glitch: 1, disco: 0, label: "leicht instabil" },
-    { minBurst: 10, shake: 2, glitch: 1, disco: 1, label: "kritisch hypey" },
-    { minBurst: 14, shake: 3, glitch: 1, disco: 1, label: "sehr kritisch" },
-    { minBurst: 18, shake: 3, glitch: 1, disco: 1, label: "meltdown imminent" },
+    { minBurst: 4,  shake: 1, glitch: 1, disco: 0, label: "leicht instabil" },
+    { minBurst: 7,  shake: 2, glitch: 1, disco: 1, label: "kritisch hypey" },
+    { minBurst: 10, shake: 3, glitch: 1, disco: 1, label: "kurz vor meltdown" },
   ],
 
-  // NEW: mehr Klicks bis Meltdown + länger + längerer Cooldown
-  meltdownBurst: 22,
-  meltdownDurationMs: 6000,
-  meltdownCooldownMs: 9000,
+  // Meltdown Trigger (Burst)
+  meltdownBurst: 12,
+  meltdownDurationMs: 3500,
+  meltdownCooldownMs: 5500,
 
-  // ===== Thriller Pattern (tempo-invariant) =====
+  // ===== Thriller Pattern (tempo-invariant, 8 clicks => 7 intervals) =====
   thriller: {
     enabled: true,
 
-    expectedMultiples: [1, 1, 1, 2],
-    baseMs: 260,
-    toleranceMs: 120,
+    // Du hast Daten für 8 Klicks gesammelt => 7 Intervalle:
+    // Häufigster “Kern”: 1,1,1,2,6/7,2,2
+    // Wir erlauben 3 Pattern-Varianten (damit du es reproduzieren kannst),
+    // aber Random-Klicken soll praktisch nie passen.
+    expectedMultiplesSets: [
+      [1, 1, 1, 2, 6, 2, 2],
+      [1, 1, 1, 2, 7, 2, 2],
+      [1, 1, 1, 1, 7, 2, 2],
+    ],
 
-    minBaseMs: 140,
-    maxBaseMs: 420,
+    // Toleranz pro Intervall (enger als vorher -> weniger Zufallstreffer)
+    toleranceMs: 90,
 
-    maxTotalWindowMs: 2000,
-    activateDurationMs: 6500
+    // Tempo-Grenzen (deine baseMs lagen ~230-265)
+    minBaseMs: 170,
+    maxBaseMs: 340,
+
+    // Zeitfenster (muss groß genug sein für das 6x/7x Long Gap)
+    // Summe der Multiples liegt grob bei 15–16 => bei base 250 ~ 3750–4000ms
+    // Wir geben etwas Luft.
+    maxTotalWindowMs: 5200,
+
+    // Thriller bleibt aktiv / Sound soll voll laufen (15s)
+    activateDurationMs: 15000
   },
 
+  // Facts (Stub)
   facts: [
     "Daily Fact System: noch in Entwicklung (weil ich eigentlich lernen sollte)."
   ],
 
+  // Bilder: Daily Rotation p1..p25 + Spezialbild für Thriller
   images: Array.from({ length: 25 }, (_, i) => `assets/images/p${i + 1}.jpg`),
   thrillerImage: "assets/images/thrillermodepicture.jpg"
 };
@@ -84,38 +100,37 @@ const sounds = {
   thrillermode: "assets/sounds/thrillermode.mp3",
 };
 
-// Long tracks (stop/seek möglich)
+// Long tracks als einzelne Instanzen (stop/seek möglich)
 const longTrack = {
   beatit: new Audio(sounds.beatit),
   thrillerbass: new Audio(sounds.thrillerbass),
   thrillermode: new Audio(sounds.thrillermode),
 };
 
-// NEW: lauter wie gewünscht
-longTrack.beatit.volume = 1.0;
-longTrack.thrillerbass.volume = 0.95;
+// Lautstärken: beatit/thrillermode lauter + Thriller jetzt voll laut
+longTrack.beatit.volume = 0.95;
+longTrack.thrillerbass.volume = 0.85;
 longTrack.thrillermode.volume = 1.0;
 
 let lastBeatItAt = 0;
-const BEATIT_COOLDOWN_MS = 7000;
-const BEATIT_STING_MS = 3000;
+const BEATIT_COOLDOWN_MS = 6000;
+const BEATIT_STING_MS = 2800;
 
 // ====== STATE ======
 let sessionHype = 0;
 let globalHype = loadGlobalHype();
-let clickTimes = [];
+let clickTimes = [];   // timestamps for burst logic
 
+// Thriller tracking
 let patternClicks = [];
 let thrillerActive = false;
 
+// Meltdown tracking
 let meltdownActive = false;
 let meltdownCooldownUntil = 0;
 
 // Daily image state
 let dailyImageIndex = 0;
-
-// NEW: Timer für “Meltdown-Puls”
-let meltdownFxTimer = null;
 
 // ====== INIT ======
 renderCounters();
@@ -138,28 +153,25 @@ el.hypeBtn.addEventListener("click", () => {
   clickTimes = pruneTimes(clickTimes, now - CONFIG.burstWindowMs);
   const burst = clickTimes.length;
 
-  // Thriller Pattern (nur wenn kein Meltdown)
-  if (CONFIG.thriller.enabled && !thrillerActive && !meltdownActive) {
+  // Thriller pattern attempt (tempo-invariant, now 8 clicks)
+  if (CONFIG.thriller.enabled && !thrillerActive) {
     patternClicks.push(now);
     patternClicks = pruneTimes(patternClicks, now - CONFIG.thriller.maxTotalWindowMs);
 
     if (matchesThrillerPattern(patternClicks)) {
       activateThrillerMode();
       patternClicks = [];
-      return;
+      return; // nicht gleichzeitig normale Sounds/FX drüberlegen
     }
   }
 
-  // Cooldown: nur mini FX
+  // Cooldown: mini reaction, aber kein meltdown
   if (now < meltdownCooldownUntil) {
     quickGlitch();
     mildShake(1);
     setStatus("cooldown…", "inaktiv");
 
-    // Wenn BeatIt gerade läuft (Meltdown), dann nicht drüberrandomizen
-    if (!isAudioPlaying(longTrack.beatit)) {
-      playRandomHypeSound({ volume: 0.55 });
-    }
+    playRandomHypeSound({ volume: 0.55 });
 
     logLine(`• Hype +1 (Burst ${burst}) — cooldown aktiv.`);
     return;
@@ -177,10 +189,11 @@ el.hypeBtn.addEventListener("click", () => {
   applyLevelFX(level);
   setStatus(level.label, thrillerActive ? "aktiv" : "inaktiv");
 
-  playRandomHypeSound({ volume: 0.78 });
+  // Sounds
+  playRandomHypeSound({ volume: 0.75 });
 
-  // BeatIt “Warn-Sting” kurz vor Meltdown
-  if (level.label === "meltdown imminent") maybePlayBeatItSting(now);
+  // BeatIt-Sting bei "kurz vor meltdown"
+  if (level.minBurst >= 10) maybePlayBeatItSting(now);
 
   logLine(`• Hype +1 (Sitzung ${sessionHype}, Global ${globalHype}) — Burst ${burst} → Level ${levelIndexFor(level)}.`);
 });
@@ -306,23 +319,23 @@ function mildShake(intensity){
   if (!el.app) return;
   const cls = `shake-${Math.min(3, Math.max(1, intensity))}`;
   el.app.classList.remove(cls);
-  void el.app.offsetWidth;
+  void el.app.offsetWidth; // reflow
   el.app.classList.add(cls);
 }
 
 function quickGlitch(){
   if (!el.fx) return;
   el.fx.classList.add("glitch");
-  setTimeout(() => el.fx.classList.remove("glitch"), 140);
+  setTimeout(() => el.fx.classList.remove("glitch"), 120);
 }
 
 function setDisco(on, fadeMs){
   if (!el.disco) return;
   el.disco.style.transitionDuration = `${fadeMs}ms`;
-  el.disco.style.opacity = on ? "0.40" : "0";
+  el.disco.style.opacity = on ? "0.35" : "0";
 }
 
-// ====== MELTDOWN (UPGRADED) ======
+// ====== MELTDOWN ======
 function activateMeltdown(){
   if (meltdownActive) return;
 
@@ -333,77 +346,98 @@ function activateMeltdown(){
   setStatus("MELTDOWN", thrillerActive ? "aktiv" : "inaktiv");
   if (el.fx) el.fx.classList.add("meltdown");
 
-  // Impact beim Eintritt
-  quickGlitch();
+  // escalate visuals
+  if (el.disco) el.disco.style.opacity = "0.9";
+  if (el.confetti) el.confetti.style.opacity = "0.85";
+  if (el.noise) el.noise.style.opacity = "0.45";
+  if (el.scanlines) el.scanlines.style.opacity = "0.20";
+  if (el.glitchLayer) el.glitchLayer.style.opacity = "0.60";
+
+  // big shake pulses
   mildShake(3);
+  setTimeout(() => mildShake(3), 260);
+  setTimeout(() => mildShake(3), 520);
 
-  // Visuell deutlich mehr
-  if (el.disco) el.disco.style.opacity = "1";
-  if (el.confetti) el.confetti.style.opacity = "1";
-  if (el.noise) el.noise.style.opacity = "0.70";
-  if (el.scanlines) el.scanlines.style.opacity = "0.35";
-  if (el.glitchLayer) el.glitchLayer.style.opacity = "0.85";
-
-  // Pulsierende Eskalation während Meltdown
-  if (meltdownFxTimer) clearInterval(meltdownFxTimer);
-  meltdownFxTimer = setInterval(() => {
-    mildShake(3);
-    quickGlitch();
-    if (el.disco) el.disco.style.opacity = (Math.random() > 0.5) ? "1" : "0.85";
-    if (el.glitchLayer) el.glitchLayer.style.opacity = (Math.random() > 0.5) ? "0.95" : "0.75";
-  }, 280);
-
-  // Sound: BeatIt beim Eintritt — volle Länge laufen lassen
+  // Sound: thriller bass
   stopLongTracks();
-  playLongTrack(longTrack.beatit);
+  playLongTrack(longTrack.thrillerbass);
 
   setTimeout(() => {
     meltdownActive = false;
-
-    if (meltdownFxTimer) {
-      clearInterval(meltdownFxTimer);
-      meltdownFxTimer = null;
-    }
-
     if (el.fx) el.fx.classList.remove("meltdown");
 
-    // runterfahren
+    // calm down
     if (el.disco) el.disco.style.opacity = "0";
     if (el.confetti) el.confetti.style.opacity = "0";
     if (el.noise) el.noise.style.opacity = "0";
     if (el.scanlines) el.scanlines.style.opacity = "0";
     if (el.glitchLayer) el.glitchLayer.style.opacity = "0";
 
-    // BeatIt NICHT stoppen (du wolltest ~13s “voll”)
+    stopLongTrack(longTrack.thrillerbass);
+
     setStatus("cooldown…", thrillerActive ? "aktiv" : "inaktiv");
     logLine("• Meltdown beendet. Bitte weiterlernen (angeblich).");
   }, CONFIG.meltdownDurationMs);
 }
 
-// ====== THRILLER PATTERN ======
+// ====== THRILLER PATTERN (tempo-invariant, robust) ======
 function matchesThrillerPattern(clicks){
-  const expected = CONFIG.thriller.expectedMultiples;
-  const neededClicks = expected.length + 1;
+  const sets = CONFIG.thriller.expectedMultiplesSets;
+
+  // Wir brauchen 8 Klicks => 7 Intervalle
+  const neededClicks = 8;
   if (clicks.length < neededClicks) return false;
 
+  // letzte 8 Klicks nehmen
   const slice = clicks.slice(-neededClicks);
 
+  // deltas (7)
   const deltas = [];
   for (let i = 1; i < slice.length; i++){
     deltas.push(slice[i] - slice[i-1]);
   }
 
-  const sorted = [...deltas].sort((a,b) => a-b);
-  const baseLive = sorted[Math.floor(sorted.length / 2)];
+  // Für jedes erlaubte Pattern prüfen
+  for (const expected of sets){
+    if (expected.length !== deltas.length) continue;
 
-  if (baseLive < CONFIG.thriller.minBaseMs || baseLive > CONFIG.thriller.maxBaseMs) return false;
+    // baseLive Schätzung: median(delta_i / multiple_i)
+    const baseCandidates = deltas.map((d, i) => d / expected[i]).filter(x => Number.isFinite(x) && x > 0);
+    const baseLive = median(baseCandidates);
 
-  for (let i = 0; i < expected.length; i++){
-    const target = expected[i] * baseLive;
-    if (Math.abs(deltas[i] - target) > CONFIG.thriller.toleranceMs) return false;
+    if (baseLive < CONFIG.thriller.minBaseMs || baseLive > CONFIG.thriller.maxBaseMs) continue;
+
+    // Anti-Random: der “lange” Abstand muss wirklich der größte sein (Position 5 / index 4)
+    const longIdx = expected.indexOf(Math.max(...expected));
+    const maxDelta = Math.max(...deltas);
+    if (deltas[longIdx] !== maxDelta) continue;
+
+    // Total window check: passt grob zur Summe der Multiples * base
+    const sumMultiples = expected.reduce((a,b) => a + b, 0);
+    const targetTotal = sumMultiples * baseLive;
+    const gotTotal = deltas.reduce((a,b) => a + b, 0);
+    const slack = (CONFIG.thriller.toleranceMs * expected.length) + 350; // bisschen Luft
+    if (Math.abs(gotTotal - targetTotal) > slack) continue;
+
+    // Hauptcheck: jedes Intervall muss passen (enger)
+    let ok = 0;
+    for (let i = 0; i < expected.length; i++){
+      const target = expected[i] * baseLive;
+      if (Math.abs(deltas[i] - target) <= CONFIG.thriller.toleranceMs) ok++;
+    }
+
+    // Strikt genug gegen Zufall: 7/7 müssen sitzen
+    if (ok === expected.length) return true;
   }
 
-  return true;
+  return false;
+}
+
+function median(arr){
+  if (!arr || arr.length === 0) return NaN;
+  const s = [...arr].sort((a,b)=>a-b);
+  const mid = Math.floor(s.length/2);
+  return (s.length % 2 === 0) ? (s[mid-1] + s[mid]) / 2 : s[mid];
 }
 
 // ====== THRILLER MODE ======
@@ -412,16 +446,19 @@ function activateThrillerMode(){
   if (el.thrillerStatus) el.thrillerStatus.textContent = "aktiv";
   logLine("• THRILLER MODE ACTIVATED (Secret Protocol).");
 
+  // Bild wechseln
   setThrillerImage();
 
+  // stylish dark FX
   if (el.fx) el.fx.classList.add("thriller");
-  if (el.noise) el.noise.style.opacity = "0.60";
-  if (el.scanlines) el.scanlines.style.opacity = "0.40";
-  if (el.disco) el.disco.style.opacity = "0.15";
+  if (el.noise) el.noise.style.opacity = "0.55";
+  if (el.scanlines) el.scanlines.style.opacity = "0.35";
+  if (el.disco) el.disco.style.opacity = "0.12";
 
   quickGlitch();
   mildShake(1);
 
+  // Sound: thrillermode soll komplett laufen (15s)
   stopLongTracks();
   playLongTrack(longTrack.thrillermode);
 
@@ -434,9 +471,12 @@ function activateThrillerMode(){
     if (el.scanlines) el.scanlines.style.opacity = "0";
     if (el.disco) el.disco.style.opacity = "0";
 
-    stopLongTrack(longTrack.thrillermode);
+    // WICHTIG: Wir stoppen den Sound NICHT hart -> er soll seine ~15s durchlaufen.
+    // Wenn du später willst, dass er exakt mit dem Modus endet, sag’s – dann stoppen wir hier.
 
+    // Bild zurück
     restoreDailyImage();
+
     logLine("• Thriller Mode beendet.");
   }, CONFIG.thriller.activateDurationMs);
 }
@@ -454,7 +494,9 @@ function logLine(text){
   div.textContent = text;
   el.log.appendChild(div);
 
-  while (el.log.children.length > 14) el.log.removeChild(el.log.firstChild);
+  while (el.log.children.length > 14) {
+    el.log.removeChild(el.log.firstChild);
+  }
   el.log.scrollTop = el.log.scrollHeight;
 }
 
@@ -465,6 +507,7 @@ function playRandomHypeSound(opts = {}){
 
   const a = new Audio(src);
   a.volume = typeof opts.volume === "number" ? opts.volume : 0.75;
+
   a.currentTime = 0;
   a.play().catch(()=>{});
 }
@@ -496,16 +539,6 @@ function maybePlayBeatItSting(nowMs){
   stopLongTrack(longTrack.beatit);
   playLongTrack(longTrack.beatit);
 
-  setTimeout(() => {
-    // Sting beenden, damit Meltdown-Trigger später wieder “Impact” hat
-    stopLongTrack(longTrack.beatit);
-  }, BEATIT_STING_MS);
+  setTimeout(() => stopLongTrack(longTrack.beatit), BEATIT_STING_MS);
 }
 
-function isAudioPlaying(aud){
-  try{
-    return aud && !aud.paused && aud.currentTime > 0 && !aud.ended;
-  }catch(_){
-    return false;
-  }
-}
