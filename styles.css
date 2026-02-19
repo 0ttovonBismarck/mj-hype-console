@@ -280,7 +280,7 @@ body{
   justify-content: center;
 }
 
-.dailyImageBox img{
+#dailyImageWrap img{
   width: 100%;
   height: 100%;
   display: block;
@@ -290,6 +290,13 @@ body{
   object-position: center;
 
   filter: contrast(1.02) saturate(1.02);
+
+  #dailyImageWrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
 
   /* ===== Moving disco lights ===== */
 @keyframes discoSpin {
@@ -351,4 +358,5 @@ body{
   50%  { left:55%; }
   100% { left:110%; }
 }
+
 
