@@ -16,7 +16,7 @@ const CONFIG = {
     { minBurst: 6,  label: "leicht instabil" },
     { minBurst: 10, label: "kritisch hypey" },
     { minBurst: 14, label: "sehr kritisch" },
-    { minBurst: 16, label: "meltdown imminent" },
+    { minBurst: 16, label: "meltdown imminent" }
   ],
 
   // Meltdown früher/erreichbarer als vorher
@@ -605,6 +605,7 @@ function maybePlayBeatItSting(nowMs){
 
   setTimeout(() => stopLongTrack(longTrack.beatit), BEATIT_STING_MS);
 }
+
 
 
 
