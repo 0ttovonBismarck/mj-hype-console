@@ -23,13 +23,15 @@
       </div>
 
       <div class="meta">
-  <div class="pill">Status: <span id="statusText">stabil-ish</span></div>
-  <div class="pill">Thriller-Protokoll: <span id="thrillerStatus">inaktiv</span></div>
-  <div class="pill">Hype Tier: <span id="hypeTier">—</span></div>
-</div>
+        <div class="pill">Status: <span id="statusText">stabil-ish</span></div>
+        <div class="pill">Thriller-Protokoll: <span id="thrillerStatus">inaktiv</span></div>
+        <div class="pill">Hype Tier: <span id="hypeTier">—</span></div>
+      </div>
+    </header>
 
     <section class="panel">
       <h2>Live Countdown</h2>
+      <p class="cdNote" id="countdownNote"></p>
 
       <div class="countdown" role="group" aria-label="Countdown">
         <div class="cdItem">
@@ -52,10 +54,11 @@
 
       <!-- ===== DAILY IMAGE SLOT ===== -->
       <div class="dailyImageBox">
-  <div id="dailyImageWrap">
-    <img id="dailyImage" src="" alt="Michael Jackson Bild des Tages">
-  </div>
-</div>
+        <div id="dailyImageWrap">
+          <img id="dailyImage" src="" alt="Michael Jackson Bild des Tages">
+          <div id="thrillerCaption">It’s close to midnight…</div>
+        </div>
+      </div>
 
       <div class="row">
         <button id="hypeBtn" class="btn">
@@ -99,10 +102,10 @@
 Jeder Klick auf ACTIVATE HYPE erhöht das Level.
 Mehr Klicks in kurzer Zeit = mehr Energie.
 
-⚠️ Aber Vorsicht:
+Aber Vorsicht:
 Zu viel Hype auf einmal kann einen Meltdown auslösen.
-Dann muss sich das System erst einmal kurz beruhigen. 
-          
+Dann muss sich das System erst einmal kurz beruhigen.
+
           <span class="kbd">Spezialfunktion</span> Spielst du mit 8 Klicks im richtigen Rhythmus die Melodie von Thriller,
 aktiviert sich automatisch der Thriller Modus.
 
@@ -115,9 +118,9 @@ aktiviert sich automatisch der Thriller Modus.
     </section>
   </main>
 
+  <!-- Toast für Session-Events -->
+  <div id="toast" class="toast" aria-live="polite"></div>
+
   <script src="app.js"></script>
 </body>
 </html>
-
-
-
