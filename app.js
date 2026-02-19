@@ -46,8 +46,8 @@ const CONFIG = {
     activateDurationMs: 15000,
 
     // Anti-Spam: es MUSS eine echte "lange Pause" geben (ca. 6x base)
-    minLongestMultiple: 5.2,
-    maxLongestMultiple: 7.6
+    minLongestMultiple: 4.6,
+    maxLongestMultiple: 8.6
   },
 
   // Global Hype Tier (abhängig vom globalen Hype)
@@ -690,6 +690,7 @@ function stopLongTrack(aud){
     aud.currentTime = 0;
   }catch(_){}
 }
+
 
 
 
