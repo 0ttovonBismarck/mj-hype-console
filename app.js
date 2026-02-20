@@ -259,6 +259,8 @@ if (el.hypeBtn){
       patternClicks.push(now);
       patternClicks = pruneTimes(patternClicks, now - CONFIG.thriller.maxTotalWindowMs);
 
+      logLine(`• PatternClicks=${patternClicks.length} | Burst=${burst}`);
+
       if (matchesThrillerPattern(patternClicks)) {
         activateThrillerMode();
         patternClicks = [];
@@ -689,6 +691,7 @@ function stopLongTrack(aud){
     aud.currentTime = 0;
   }catch(_){}
 }
+
 
 
 
