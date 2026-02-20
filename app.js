@@ -576,67 +576,61 @@ function activateMeltdown(){
 
 // ====== THRILLER PATTERN ======
 function matchesThrillerPattern(clicks){
-  const expected = CONFIG.thriller.expectedMultiples; // [1,1,1,2,6,2,2]
-  const neededClicks = expected.length + 1;          // 8 Klicks
-  if (clicks.length < neededClicks) return false;
+  // 8 Klicks => 7 Intervalle
+  const needed = 8;
+  if (clicks.length < needed) return false;
 
-  // Wir checken immer die letzten 8 Klicks
-  const slice = clicks.slice(-neededClicks);
+  const slice = clicks.slice(-needed);
 
-  // deltas zwischen den 8 Klicks => 7 Intervalle
   const deltas = [];
   for (let i = 1; i < slice.length; i++){
     deltas.push(slice[i] - slice[i-1]);
   }
 
-  // --- 1) base robust bestimmen ---
-  // Statt "alles außer longest" nehmen wir die kleineren Deltas als Basis-Kandidaten.
-  // Das macht es weniger zufällig, aber NICHT leichter (du musst die Struktur trotzdem treffen).
-  const sortedAll = [...deltas].sort((a,b)=>a-b);
-  const longest = sortedAll[sortedAll.length - 1];
+  // Base = Median der 3 kleinsten Intervalle (robust gegen Ausreißer)
+  const sorted = [...deltas].sort((a,b)=>a-b);
+  const base = sorted[1]; // median of 3 smallest: [a,b,c] => b
 
-  // Basis-Kandidaten: die 4 kleinsten Deltas (bei 7 Deltas)
-  const baseCandidates = sortedAll.slice(0, 4);
-  const baseLive = baseCandidates[Math.floor(baseCandidates.length / 2)]; // Median
+  // Tempo-Sanity: verhindert Zufall bei ultra langsamen/ultra schnellen Klicks
+  if (base < 130 || base > 520) return false;
 
-  // Debug kannst du drin lassen oder später rauswerfen:
-  // logLine(`• Thriller deltas: ${deltas.map(d=>Math.round(d)).join(", ")}`);
-  // logLine(`• Thriller base=${Math.round(baseLive)}ms longest×=${(longest/baseLive).toFixed(2)}`);
+  // Long pause = größtes Delta
+  const longest = sorted[sorted.length - 1];
+  const longIndex = deltas.indexOf(longest);
 
-  if (baseLive < CONFIG.thriller.minBaseMs || baseLive > CONFIG.thriller.maxBaseMs) return false;
+  // Long pause muss "deutlich länger" sein (aber nicht 6× exakt)
+  const longMult = longest / base;
+  if (longMult < 2.4 || longMult > 6.8) return false;
 
-  // --- 2) echte lange Pause erzwingen (Anti-Spam) ---
-  const longestMultiple = longest / baseLive;
-  if (longestMultiple < CONFIG.thriller.minLongestMultiple) return false;
-  if (longestMultiple > CONFIG.thriller.maxLongestMultiple) return false;
+  // Long pause soll ungefähr "in der Mitte" sitzen (nicht ganz am Anfang/Ende)
+  // Erlaubt Index 3,4,5 (also nach 4.–6. Klick)
+  if (longIndex < 3 || longIndex > 5) return false;
 
-  // --- 3) Position der langen Pause tolerant machen (aber nicht beliebig) ---
-  // Die lange Pause ist schwer abzuschätzen; wir erlauben, dass sie 1 Stelle früher/später liegt.
-  // Das verhindert Frust, ohne "random" Trigger.
-  const expectedLongIndex = expected.indexOf(6); // bei dir 4
-  const actualLongIndex = deltas.indexOf(longest);
+  // Helper: ratio checks (menschlich toleranter als ms-genauigkeit)
+  const ratio = (x) => x / base;
+  const isShort = (x) => ratio(x) >= 0.65 && ratio(x) <= 1.45;   // "kurz"
+  const isMed   = (x) => ratio(x) >= 1.35 && ratio(x) <= 2.80;   // "medium"
 
-  if (Math.abs(actualLongIndex - expectedLongIndex) > 1) return false;
+  // 1) Die ersten drei sollen kurz sein (das verhindert Random-Trigger massiv)
+  if (!isShort(deltas[0])) return false;
+  if (!isShort(deltas[1])) return false;
+  if (!isShort(deltas[2])) return false;
 
-  // --- 4) Intervall-Check: wir vergleichen gegen expectedMultiples ---
-  // Wenn die lange Pause an Index 3/4/5 liegt, passen wir nur dort die Erwartung an:
-  // Wir wollen, dass es *wie Thriller* gespielt wurde, nicht dass der Long-Pause-Slot pixelgenau ist.
-  for (let i = 0; i < expected.length; i++){
-    // Erlaubte Verschiebung der "6" um maximal 1 Slot
-    let mult = expected[i];
+  // 2) Vor der Long-Pause soll ein Medium sitzen (das "2×" Feeling)
+  // Je nachdem wo die Long-Pause liegt, prüfen wir das Delta direkt davor.
+  const beforeLong = deltas[longIndex - 1];
+  if (!isMed(beforeLong)) return false;
 
-    if (i === expectedLongIndex && actualLongIndex !== expectedLongIndex){
-      // Wenn die lange Pause nicht am "6"-Slot ist, wird der ursprüngliche 6-Slot eher ein 2er/1er Slot.
-      // Wir lockern NICHT blind, sondern nehmen hier den lokalen Kontext: 2 ist das nächstlogische.
-      mult = 2;
-    }
-    if (i === actualLongIndex){
-      mult = 6;
-    }
+  // 3) Nach der Long-Pause sollen zwei Mediums folgen (das "ta-ta" danach)
+  // Wir nehmen die zwei Deltas direkt nach der Long-Pause (falls vorhanden).
+  const after1 = deltas[longIndex + 1];
+  const after2 = deltas[longIndex + 2];
 
-    const target = mult * baseLive;
-    if (Math.abs(deltas[i] - target) > CONFIG.thriller.toleranceMs) return false;
-  }
+  // Wenn longIndex zu spät ist, fehlt after2 => dann fail (bewusst: verhindert Zufall)
+  if (after1 == null || after2 == null) return false;
+
+  if (!isMed(after1)) return false;
+  if (!isMed(after2)) return false;
 
   return true;
 }
@@ -725,6 +719,7 @@ function stopLongTrack(aud){
     aud.currentTime = 0;
   }catch(_){}
 }
+
 
 
 
