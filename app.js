@@ -587,11 +587,15 @@ function matchesThrillerPattern(clicks){
     deltas.push(slice[i] - slice[i-1]);
   }
 
+  logLine(`• Thriller deltas: ${deltas.map(d=>Math.round(d)).join(", ")}`);
+
   // baseLive: median der "kurzen" Deltas (wir ignorieren die größte Pause)
   const sorted = [...deltas].sort((a,b) => a-b);
   const longest = sorted[sorted.length - 1];
   const shorts = sorted.slice(0, sorted.length - 1);
   const baseLive = shorts[Math.floor(shorts.length / 2)];
+
+  logLine(`• Thriller base=${Math.round(baseLive)}ms longest×=${(longest/baseLive).toFixed(2)}`);
 
   if (baseLive < CONFIG.thriller.minBaseMs || baseLive > CONFIG.thriller.maxBaseMs) return false;
 
@@ -691,6 +695,7 @@ function stopLongTrack(aud){
     aud.currentTime = 0;
   }catch(_){}
 }
+
 
 
 
