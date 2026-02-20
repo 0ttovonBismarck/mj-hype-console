@@ -641,30 +641,6 @@ function matchesThrillerPattern(clicks){
   return true;
 }
 
-  logLine(`• Thriller deltas: ${deltas.map(d=>Math.round(d)).join(", ")}`);
-
-  // baseLive: median der "kurzen" Deltas (wir ignorieren die größte Pause)
-  const sorted = [...deltas].sort((a,b) => a-b);
-  const longest = sorted[sorted.length - 1];
-  const shorts = sorted.slice(0, sorted.length - 1);
-  const baseLive = shorts[Math.floor(shorts.length / 2)];
-
-  logLine(`• Thriller base=${Math.round(baseLive)}ms longest×=${(longest/baseLive).toFixed(2)}`);
-
-  if (baseLive < CONFIG.thriller.minBaseMs || baseLive > CONFIG.thriller.maxBaseMs) return false;
-
-  // Anti-Spam: lange Pause muss echt vorhanden sein (ca. 6x base)
-  const longestMultiple = longest / baseLive;
-  if (longestMultiple < CONFIG.thriller.minLongestMultiple) return false;
-  if (longestMultiple > CONFIG.thriller.maxLongestMultiple) return false;
-
-  for (let i = 0; i < expected.length; i++){
-    const target = expected[i] * baseLive;
-    if (Math.abs(deltas[i] - target) > CONFIG.thriller.toleranceMs) return false;
-  }
-
-  return true;
-}
 
 // ====== THRILLER MODE ======
 function activateThrillerMode(){
@@ -749,6 +725,7 @@ function stopLongTrack(aud){
     aud.currentTime = 0;
   }catch(_){}
 }
+
 
 
 
