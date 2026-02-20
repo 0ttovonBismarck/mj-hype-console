@@ -64,7 +64,7 @@ const CONFIG = {
   ],
 
   images: Array.from({ length: 25 }, (_, i) => `assets/images/p${i + 1}.jpg`),
-  thrillerImage: "assets/thrillermodepicture.gif"
+  thrillerImage: "assets/images/thrillermodepicture.gif"
 };
 
 // ====== DOM ======
@@ -719,6 +719,7 @@ function stopLongTrack(aud){
     aud.currentTime = 0;
   }catch(_){}
 }
+
 
 
 
