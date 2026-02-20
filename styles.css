@@ -676,4 +676,15 @@ body{
 input, textarea, select { font-size: 16px; }
 button, .btn, .linkBtn { touch-action: manipulation; }
 
+/* Prevent iOS double-tap zoom on interactive elements */
+button, .btn, .linkBtn, #hypeBtn {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+input, textarea, select {
+  font-size: 16px;
+}
+
+
 
