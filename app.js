@@ -446,7 +446,6 @@ function tickStageDecay(){
   const now = Date.now();
 
   clickTimes = pruneTimes(clickTimes, now - CONFIG.burstWindowMs);
-  patternClicks = pruneTimes(patternClicks, now - CONFIG.thriller.maxTotalWindowMs);
 
   const burst = clickTimes.length;
 
@@ -690,6 +689,7 @@ function stopLongTrack(aud){
     aud.currentTime = 0;
   }catch(_){}
 }
+
 
 
 
