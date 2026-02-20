@@ -37,7 +37,7 @@ const CONFIG = {
 
     // Tempo-Grenzen (deine Bases lagen grob 230–265ms)
     minBaseMs: 140,
-    maxBaseMs: 460,
+    maxBaseMs: 500,
 
     // 8 Klicks inkl. langer Pause -> größeres Gesamtfenster
     maxTotalWindowMs: 6001,
@@ -47,7 +47,7 @@ const CONFIG = {
 
     // Anti-Spam: es MUSS eine echte "lange Pause" geben (ca. 6x base)
     minLongestMultiple: 2.6,
-    maxLongestMultiple: 5.2,
+    maxLongestMultiple: 7.2,
   },
 
   // Global Hype Tier (abhängig vom globalen Hype)
@@ -695,6 +695,7 @@ function stopLongTrack(aud){
     aud.currentTime = 0;
   }catch(_){}
 }
+
 
 
 
