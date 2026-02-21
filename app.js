@@ -720,6 +720,23 @@ function stopLongTrack(aud){
   }catch(_){}
 }
 
+// ===== DOUBLE TAP ZOOM BLOCK (iOS) =====
+(function () {
+  const btn = document.getElementById("hypeBtn");
+  if (!btn) return;
+
+  let lastTap = 0;
+
+  btn.addEventListener("touchstart", function (e) {
+    const now = Date.now();
+    if (now - lastTap < 350) {
+      e.preventDefault();
+    }
+    lastTap = now;
+  }, { passive: false });
+})();
+
+
 
 
 
