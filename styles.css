@@ -751,6 +751,16 @@ input, textarea, select {
   -webkit-touch-callout: none;
 }
 
+  /* iOS: make hype button purely touch-controlled (prevents double-tap zoom) */
+#hypeBtn{
+  touch-action: none;               /* stronger than manipulation */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+
 
 
 
