@@ -720,22 +720,38 @@ function stopLongTrack(aud){
   }catch(_){}
 }
 
-// ===== DOUBLE TAP ZOOM BLOCK (iOS) =====
+// --- iOS DOUBLE TAP ZOOM GUARD (keeps spam tapping working) ---
 (function () {
   const btn = document.getElementById("hypeBtn");
   if (!btn) return;
 
-  let lastTap = 0;
+  let lastTouchEnd = 0;
 
-  btn.addEventListener("touchstart", function (e) {
-    const now = Date.now();
-    if (now - lastTap < 350) {
-      e.preventDefault();
-    }
-    lastTap = now;
-  }, { passive: false });
+  // Block "double tap zoom" but keep clicks working
+  btn.addEventListener(
+    "touchend",
+    function (e) {
+      const now = Date.now();
+      const dt = now - lastTouchEnd;
+
+      // If it's a double tap, prevent zoom…
+      if (dt > 0 && dt < 300) {
+        e.preventDefault();
+
+        // …but still trigger the button action
+        btn.click();
+      }
+
+      lastTouchEnd = now;
+    },
+    { passive: false }
+  );
+
+  // Optional: also suppress dblclick zoom if it happens
+  btn.addEventListener("dblclick", function (e) {
+    e.preventDefault();
+  });
 })();
-
 
 
 
