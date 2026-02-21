@@ -720,6 +720,30 @@ input, textarea, select {
   overflow-x: auto;
 }
 
+/* iOS: prevent double-tap zoom / text selection on spam tapping */
+#hypeBtn, .btn, button {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+// iOS double-tap zoom guard (only for the hype button)
+(function preventDoubleTapZoom(){
+  const btn = document.getElementById("hypeBtn");
+  if (!btn) return;
+
+  let lastTouchEnd = 0;
+  btn.addEventListener("touchend", (e) => {
+    const now = Date.now();
+    if (now - lastTouchEnd <= 300) {
+      e.preventDefault(); // blocks double-tap zoom
+    }
+    lastTouchEnd = now;
+  }, { passive: false });
+})();
+
+
 
 
 
