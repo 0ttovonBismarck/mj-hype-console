@@ -743,6 +743,14 @@ input, textarea, select {
   }, { passive: false });
 })();
 
+  /* Prevent iOS double tap zoom on hype button */
+#hypeBtn {
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
 
 
 
