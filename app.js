@@ -720,42 +720,32 @@ function stopLongTrack(aud){
   }catch(_){}
 }
 
-// --- iOS DOUBLE TAP ZOOM GUARD (keeps spam tapping working) ---
+// --- iOS: prevent double-tap zoom but keep spam tapping (Hype Button only) ---
 (function () {
   const btn = document.getElementById("hypeBtn");
   if (!btn) return;
 
-  let lastTouchEnd = 0;
+  let lastTouchTS = 0;
 
-  // Block "double tap zoom" but keep clicks working
-  btn.addEventListener(
-    "touchend",
-    function (e) {
-      const now = Date.now();
-      const dt = now - lastTouchEnd;
+  // On touch, prevent default zoom behavior and trigger the normal click logic ourselves.
+  btn.addEventListener("touchstart", (e) => {
+    lastTouchTS = Date.now();
+    e.preventDefault(); // blocks iOS double-tap zoom
+    // Fire an untrusted click event so your existing click handler runs
+    btn.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+  }, { passive: false });
 
-      // If it's a double tap, prevent zoom…
-      if (dt > 0 && dt < 300) {
-        e.preventDefault();
+  // iOS sometimes fires a "ghost" trusted click after touch. Block that one.
+  btn.addEventListener("click", (e) => {
+    if (e.isTrusted && (Date.now() - lastTouchTS) < 800) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+    }
+  }, true);
 
-        // …but still trigger the button action
-        btn.click();
-      }
-
-      lastTouchEnd = now;
-    },
-    { passive: false }
-  );
-
-  // Optional: also suppress dblclick zoom if it happens
-  btn.addEventListener("dblclick", function (e) {
-    e.preventDefault();
-  });
+  // Extra safety: stop dblclick default
+  btn.addEventListener("dblclick", (e) => e.preventDefault());
 })();
-
-
-
-
 
 
 
