@@ -6,7 +6,7 @@
 // ====== CONFIG ======
 const CONFIG = {
   // Deutscher Kinostart:
-  targetDate: new Date("2026-04-23T00:00:00"),
+  targetDate: new Date("2026-04-23T20:00:00"),
 
   // Burst-Logik
   burstWindowMs: 3800,
@@ -746,6 +746,7 @@ function stopLongTrack(aud){
   // Extra safety: stop dblclick default
   btn.addEventListener("dblclick", (e) => e.preventDefault());
 })();
+
 
 
 
