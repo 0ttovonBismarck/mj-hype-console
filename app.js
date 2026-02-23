@@ -169,7 +169,7 @@ const sfxPool = {};
 const sfxIndex = {};
 
 function initSfxPool(){
-  const keys = ["heehee","hoo","auw","oohh","dow","duhah","yeahyeah","ahchukah","hoow",];
+  const keys = ["heehee","hoo","auw","oohh","dow","duhah","yeahyeah","ahchukah","hoow"];
   for (const k of keys){
     sfxPool[k] = [];
     sfxIndex[k] = 0;
@@ -691,7 +691,7 @@ function logLine(text){
 
 // ====== SOUND HELPERS ======
 function playRandomHypeSound(opts = {}){
-  const poolKeys = ["heehee","hoo","auw","oohh","dow"];
+  const poolKeys = ["heehee","hoo","auw","oohh","dow","duhah","yeahyeah","ahchukah","hoow"];
   const key = poolKeys[Math.floor(Math.random() * poolKeys.length)];
 
   const idx = sfxIndex[key];
@@ -750,6 +750,7 @@ function stopLongTrack(aud){
   // Extra safety: stop dblclick default
   btn.addEventListener("dblclick", (e) => e.preventDefault());
 })();
+
 
 
 
