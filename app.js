@@ -169,7 +169,7 @@ const sfxPool = {};
 const sfxIndex = {};
 
 function initSfxPool(){
-  const keys = ["heehee","hoo","auw","oohh","dow"];
+  const keys = ["heehee","hoo","auw","oohh","dow","duhah","yeahyeah","ahchukah","hoow",];
   for (const k of keys){
     sfxPool[k] = [];
     sfxIndex[k] = 0;
@@ -750,6 +750,7 @@ function stopLongTrack(aud){
   // Extra safety: stop dblclick default
   btn.addEventListener("dblclick", (e) => e.preventDefault());
 })();
+
 
 
 
