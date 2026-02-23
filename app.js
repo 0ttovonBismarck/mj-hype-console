@@ -13,7 +13,7 @@ const CONFIG = {
 
   // Stufen (spürbarer Ramp)
   levels: [
-    { minBurst: 1,  label: "stabil-ish" },
+    { minBurst: 1,  label: "stabil" },
     { minBurst: 6,  label: "leicht instabil" },
     { minBurst: 10, label: "kritisch hypey" },
     { minBurst: 14, label: "sehr kritisch" },
@@ -226,9 +226,9 @@ if (el.hypeBtn){
     renderCounters();
 
     // Relationship mini-event
-    if (sessionHype === 100){
-      showToast("Achtung: Cassy übertreibt es wieder komplett.");
-      logLine("• Session-Event: Cassy im Hype-Modus (100).");
+    if (sessionHype === 150){
+      showToast("Achtung: Freut mich, dass es dir gefällt! Lernen wäre allerdings deutlich sinnvoller :)");
+      logLine("• Session-Event: Cassy im Hype-Modus (150).");
     }
 
     // Burst tracking
@@ -307,7 +307,7 @@ function tickCountdown(){
     el.hours.textContent = "0";
     el.minutes.textContent = "0";
     el.seconds.textContent = "0";
-    if (el.countdownNote) el.countdownNote.textContent = "Heute. Und ja: komplett verdient.";
+    if (el.countdownNote) el.countdownNote.textContent = "Heute. HEUTE!!?!?!?!?";
     setStatus("RELEASED", thrillerActive ? "aktiv" : "inaktiv");
     return;
   }
@@ -324,7 +324,7 @@ function tickCountdown(){
   el.seconds.textContent = String(seconds).padStart(2, "0");
 
   if (el.countdownNote){
-    el.countdownNote.textContent = `${days} Tage – und das Warten hat ein Ende.`;
+    el.countdownNote.textContent = `${days} Tage und das Warten hat ein Ende! :)`;
   }
 }
 
@@ -746,6 +746,7 @@ function stopLongTrack(aud){
   // Extra safety: stop dblclick default
   btn.addEventListener("dblclick", (e) => e.preventDefault());
 })();
+
 
 
 
