@@ -107,6 +107,10 @@ const SOUND_CANDIDATES = {
   heehee: ["assets/sounds/heehee.mp3", "assets/sounds/heehee.mp3.mp3"],
   hoo: ["assets/sounds/hoo.mp3", "assets/sounds/hoo.mp3.mp3"],
   oohh: ["assets/sounds/oohh.mp3", "assets/sounds/oohh.mp3.mp3"],
+  yeahyeah: ["assets/sounds/yeahyeah.mp3", "assets/sounds/yeahyeah.mp3.mp3"],
+  ahchukah: ["assets/sounds/ahchukah.mp3", "assets/sounds/ahchukah.mp3.mp3"],
+  hoow: ["assets/sounds/hoow.mp3", "assets/sounds/hoow.mp3.mp3"],
+  duhah: ["assets/sounds/duhah.mp3", "assets/sounds/duhah.mp3.mp3"],
 
   // Long tracks
   beatit: ["assets/sounds/beatit.mp3", "assets/sounds/beatit.m4a", "assets/sounds/beatit.mp3.m4a"],
@@ -746,6 +750,7 @@ function stopLongTrack(aud){
   // Extra safety: stop dblclick default
   btn.addEventListener("dblclick", (e) => e.preventDefault());
 })();
+
 
 
 
