@@ -780,10 +780,6 @@ function stopLongTrack(aud){
   btn.addEventListener("dblclick", (e) => e.preventDefault());
 })();
 
-// iOS double-tap zoom guard (only for the hype button)
-(function preventDoubleTapZoom(){
-  const btn = document.getElementById("hypeBtn");
-  if (!btn) return;
 
 
 
