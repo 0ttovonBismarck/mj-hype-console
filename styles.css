@@ -729,16 +729,6 @@ input, textarea, select {
 }
 
 
-  let lastTouchEnd = 0;
-  btn.addEventListener("touchend", (e) => {
-    const now = Date.now();
-    if (now - lastTouchEnd <= 300) {
-      e.preventDefault(); // blocks double-tap zoom
-    }
-    lastTouchEnd = now;
-  }, { passive: false });
-})();
-
   /* Prevent iOS double tap zoom on hype button */
 #hypeBtn {
   touch-action: manipulation;
