@@ -6,7 +6,7 @@
 // ====== CONFIG ======
 const CONFIG = {
   // Deutscher Kinostart:
-  targetDate: new Date("2026-04-23T20:00:00"),
+  targetDate: new Date("2026-04-22T16:45:00"),
 
   // Burst-Logik
   burstWindowMs: 3800,
