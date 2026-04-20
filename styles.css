@@ -760,6 +760,163 @@ input, textarea, select {
   -webkit-tap-highlight-color: transparent;
 }
 
+  /* ==============================
+   RELEASE POPUP
+   ============================== */
+
+.releasePopup{
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  background: rgba(0,0,0,.72);
+  backdrop-filter: blur(8px);
+  z-index: 9999;
+}
+
+.releasePopup.show{
+  display: flex;
+}
+
+.releasePopupCard{
+  position: relative;
+  width: min(760px, 100%);
+  max-height: 90vh;
+  overflow: auto;
+  border-radius: 22px;
+  padding: 26px 20px 22px;
+  border: 1px solid rgba(255,255,255,.12);
+  background:
+    radial-gradient(circle at top, rgba(255,0,140,.14), transparent 38%),
+    radial-gradient(circle at 80% 20%, rgba(0,220,255,.14), transparent 35%),
+    radial-gradient(circle at 20% 80%, rgba(255,210,0,.10), transparent 35%),
+    rgba(10,10,18,.96);
+  box-shadow:
+    0 0 30px rgba(255,0,120,.18),
+    0 0 60px rgba(0,180,255,.10),
+    0 18px 60px rgba(0,0,0,.6);
+}
+
+.releaseClose{
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 24px;
+  line-height: 1;
+  color: white;
+  background: rgba(255,255,255,.08);
+}
+
+.releaseClose:hover{
+  filter: brightness(1.15);
+}
+
+.releaseHeadline{
+  margin: 2px 34px 18px 0;
+  font-family: var(--mono);
+  font-size: clamp(22px, 5vw, 42px);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  background: linear-gradient(
+    90deg,
+    #ff2d2d 0%,
+    #ff9a00 18%,
+    #ffe600 35%,
+    #4dff88 52%,
+    #00d9ff 68%,
+    #8f5bff 84%,
+    #ff2dcf 100%
+  );
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow:
+    0 0 18px rgba(255,255,255,.08),
+    0 0 30px rgba(255,0,140,.18);
+  animation: releaseRainbowShift 5s linear infinite;
+}
+
+@keyframes releaseRainbowShift{
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+.releaseAscii{
+  margin: 0 0 16px;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.03);
+  color: rgba(255,255,255,.52);
+  font-family: var(--mono);
+  font-size: 7px;
+  line-height: 1;
+  overflow-x: auto;
+}
+
+.releaseText{
+  white-space: pre-line;
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.72;
+  color: rgba(242,242,245,.96);
+  border-left: 3px solid rgba(255,45,45,.5);
+  padding-left: 14px;
+}
+
+.releaseBtn{
+  margin-top: 18px;
+  width: 100%;
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 16px;
+  padding: 14px 16px;
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .10em;
+  text-transform: uppercase;
+  color: white;
+  cursor: pointer;
+  background:
+    linear-gradient(90deg,
+      rgba(255,45,45,.24),
+      rgba(255,180,0,.20),
+      rgba(0,220,255,.18),
+      rgba(180,90,255,.20)
+    );
+  background-size: 220% 100%;
+  box-shadow: 0 0 24px rgba(255,0,120,.14);
+  animation: releaseRainbowShift 5s linear infinite;
+}
+
+.releaseBtn:hover{
+  filter: brightness(1.1);
+}
+
+@media (max-width: 720px){
+  .releasePopupCard{
+    padding: 22px 14px 16px;
+  }
+
+  .releaseAscii{
+    font-size: 5px;
+  }
+
+  .releaseText{
+    font-size: 12px;
+    line-height: 1.62;
+  }
+}
 
 
 
