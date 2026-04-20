@@ -97,6 +97,9 @@ const el = {
 
   countdownNote: document.getElementById("countdownNote"),
   toast: document.getElementById("toast"),
+  releasePopup: document.getElementById("releasePopup"),
+  closeReleasePopup: document.getElementById("closeReleasePopup"),
+  releaseContinueBtn: document.getElementById("releaseContinueBtn"),
 };
 
 // ====== AUDIO (Fallbacks, weil GitHub Upload gerne doppelte Endungen macht) ======
