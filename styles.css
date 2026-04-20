@@ -728,10 +728,6 @@ input, textarea, select {
   user-select: none;
 }
 
-// iOS double-tap zoom guard (only for the hype button)
-(function preventDoubleTapZoom(){
-  const btn = document.getElementById("hypeBtn");
-  if (!btn) return;
 
   let lastTouchEnd = 0;
   btn.addEventListener("touchend", (e) => {
