@@ -212,6 +212,18 @@ function showToast(text, ms = 2400){
   }, ms);
 }
 
+function showReleasePopup(){
+  if (!el.releasePopup) return;
+  el.releasePopup.classList.add("show");
+  el.releasePopup.setAttribute("aria-hidden", "false");
+}
+
+function hideReleasePopup(){
+  if (!el.releasePopup) return;
+  el.releasePopup.classList.remove("show");
+  el.releasePopup.setAttribute("aria-hidden", "true");
+}
+
 // ====== INIT ======
 renderCounters();
 renderDailyFact();
@@ -297,6 +309,14 @@ if (el.resetGlobal){
   });
 }
 
+if (el.closeReleasePopup){
+  el.closeReleasePopup.addEventListener("click", hideReleasePopup);
+}
+
+if (el.releaseContinueBtn){
+  el.releaseContinueBtn.addEventListener("click", hideReleasePopup);
+}
+
 // ====== COUNTDOWN ======
 function startCountdown(){
   tickCountdown();
@@ -309,15 +329,21 @@ function tickCountdown(){
   const now = new Date();
   const diff = CONFIG.targetDate.getTime() - now.getTime();
 
-  if (diff <= 0){
-    el.days.textContent = "0";
-    el.hours.textContent = "0";
-    el.minutes.textContent = "0";
-    el.seconds.textContent = "0";
-    if (el.countdownNote) el.countdownNote.textContent = "Heute. HEUTE!!?!?!?!?";
-    setStatus("RELEASED", thrillerActive ? "aktiv" : "inaktiv");
-    return;
+if (diff <= 0){
+  el.days.textContent = "0";
+  el.hours.textContent = "0";
+  el.minutes.textContent = "0";
+  el.seconds.textContent = "0";
+  if (el.countdownNote) el.countdownNote.textContent = "Heute. Heute!?!?!?!?!?!?!?";
+  setStatus("RELEASED", thrillerActive ? "aktiv" : "inaktiv");
+
+  if (!window.__releasePopupShown){
+    showReleasePopup();
+    window.__releasePopupShown = true;
   }
+
+  return;
+}
 
   const totalSeconds = Math.floor(diff / 1000);
   const days = Math.floor(totalSeconds / (24 * 3600));
