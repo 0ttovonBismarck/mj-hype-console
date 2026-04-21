@@ -360,7 +360,7 @@ if (diff <= 0){
   el.hours.textContent = "0";
   el.minutes.textContent = "0";
   el.seconds.textContent = "0";
-  if (el.countdownNote) el.countdownNote.textContent = "Heute. Heute!?!?!?!?!?!?!?";
+  if (el.countdownNote) el.countdownNote.textContent = "Der Timer ist vorbei, was bedeutet, dass der Film draußen ist. Moment mal ... was!?!?!?!?!?";
   setStatus("RELEASED", thrillerActive ? "aktiv" : "inaktiv");
 
   if (!window.__releasePopupShown){
