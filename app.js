@@ -63,7 +63,33 @@ const CONFIG = {
     "Daily Fact System: noch in Entwicklung (weil ich eigentlich lernen sollte)."
   ],
 
-  images: Array.from({ length: 25 }, (_, i) => `assets/images/p${i + 1}.jpg`),
+  images: [
+  "assets/images/p1.jpg",
+  "assets/images/p2.jpg",
+  "assets/images/p3.jpg",
+  "assets/images/p4.jpg",
+  "assets/images/p5.jpg",
+  "assets/images/p6.jpg",
+  "assets/images/p7.jpg",
+  "assets/images/p8.jpg",
+  "assets/images/p9.jpg",
+  "assets/images/p10.webp",
+  "assets/images/p11.jpg",
+  "assets/images/p12.webp",
+  "assets/images/p13.jpg",
+  "assets/images/p14.jpg",
+  "assets/images/p15.webp",
+  "assets/images/p16.jpg",
+  "assets/images/p17.webp",
+  "assets/images/p18.webp",
+  "assets/images/p19.jpg",
+  "assets/images/p20.jpg",
+  "assets/images/p21.jpg",
+  "assets/images/p22.jpg",
+  "assets/images/p23.jpg",
+  "assets/images/p24.jpg",
+  "assets/images/p25.jpg"
+],
   thrillerImage: "assets/images/thrillermodepicture.gif"
 };
 
